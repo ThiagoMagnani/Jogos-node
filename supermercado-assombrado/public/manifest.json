@@ -1,0 +1,9 @@
+{
+  "short_name": "Mercado",
+  "name": "Supermercado Assombrado",
+  "icons": [{ "src": "favicon.svg", "type": "image/svg+xml", "sizes": "any" }],
+  "start_url": ".",
+  "display": "standalone",
+  "theme_color": "#120a1f",
+  "background_color": "#120a1f"
+}

@@ -1,0 +1,15 @@
+{
+  "short_name": "Último Gole",
+  "name": "Bar do Fim do Mundo",
+  "icons": [
+    {
+      "src": "favicon.svg",
+      "type": "image/svg+xml",
+      "sizes": "any"
+    }
+  ],
+  "start_url": ".",
+  "display": "standalone",
+  "theme_color": "#0b0620",
+  "background_color": "#0b0620"
+}
