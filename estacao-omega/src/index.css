@@ -8,11 +8,12 @@ h1,h2,h3,p{margin:0}
 kbd{background:#0006;border:1px solid #fff4;border-bottom-width:3px;border-radius:4px;padding:2px 5px;font-family:inherit;font-size:.65rem;margin-right:2px}
 
 /* título e fim */
-.titulo,.fim{position:relative;min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:22px;padding:28px 16px;text-align:center;overflow:hidden}
+.titulo,.fim{position:relative;height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:clamp(8px,2vh,22px);padding:12px 16px;text-align:center;overflow:hidden}
+html:has(.titulo),body:has(.titulo),html:has(.fim),body:has(.fim){overflow:hidden}
 .titulo-luzes{position:absolute;inset:0;pointer-events:none;background:repeating-linear-gradient(0deg,transparent 0 3px,rgba(79,227,255,.04) 3px 4px);animation:pisca 6s infinite}
 @keyframes pisca{0%,90%,100%{opacity:1}92%{opacity:.3}95%{opacity:.8}}
 .titulo-sobre{color:var(--acido);font-size:.6rem;letter-spacing:.1em;position:relative}
-.logo{position:relative;display:flex;flex-direction:column;gap:10px;font-size:clamp(1.3rem,6vw,3.2rem);line-height:1.1;font-weight:400;color:#fff;text-shadow:4px 4px 0 #0d4a5a,0 0 28px var(--ciano)}
+.logo{position:relative;display:flex;flex-direction:column;gap:10px;font-size:clamp(1.1rem,min(6vw,6.5vh),3rem);line-height:1.1;font-weight:400;color:#fff;text-shadow:4px 4px 0 #0d4a5a,0 0 28px var(--ciano)}
 .logo-vermelho{color:var(--verm);text-shadow:4px 4px 0 #5a0f0f,0 0 30px var(--verm);animation:neon 3s infinite}
 @keyframes neon{91%,95%{opacity:.5}}
 .titulo-frase,.fim-frase{position:relative;max-width:640px;font-size:.65rem;line-height:2;color:var(--suave)}
@@ -25,10 +26,10 @@ kbd{background:#0006;border:1px solid #fff4;border-bottom-width:3px;border-radiu
 .btn-jogar:hover{transform:translateY(-3px);filter:brightness(1.15)}
 .btn-link{background:none;border:0;color:var(--suave);text-decoration:underline;font-size:.6rem}
 .titulo-caixas{position:relative;display:flex;gap:18px;flex-wrap:wrap;justify-content:center;max-width:980px}
-.caixa{background:#0008;border:2px solid var(--borda);border-radius:8px;padding:16px 18px;text-align:left;min-width:280px;flex:1}
+.caixa{background:#0008;border:2px solid var(--borda);border-radius:8px;padding:10px 14px;text-align:left;min-width:280px;flex:1}
 .caixa h2{font-size:.7rem;color:var(--acido);margin-bottom:12px}
-.caixa ul{list-style:none;margin:0;padding:0;display:grid;gap:9px;font-size:.55rem;line-height:1.7}
-.bichos li span{font-size:1rem}.bichos small{display:block;color:var(--suave);font-size:.48rem;margin-left:26px}
+.caixa ul{list-style:none;margin:0;padding:0;display:grid;gap:6px;font-size:.55rem;line-height:1.7}
+.bichos ul{grid-template-columns:1fr 1fr}.bichos li span{font-size:1rem}.bichos small{display:block;color:var(--suave);font-size:.48rem;margin-left:26px}
 .fim h1{font-size:clamp(1.1rem,5vw,2.2rem);line-height:1.4}.fim h1 small{font-size:.5em;color:var(--suave)}
 .fim.vitoria h1{color:var(--acido);text-shadow:3px 3px #0a4a14}.fim.derrota h1{color:var(--verm);text-shadow:3px 3px #5a0a0a}
 .fim-stats{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(4,1fr);gap:10px;max-width:640px;width:100%}
@@ -93,3 +94,9 @@ html:has(.jogo),body:has(.jogo){overflow:hidden}
 @media(max-width:760px){.fim-stats{grid-template-columns:1fr 1fr}.hud{justify-content:center}.loja-grid{grid-template-columns:1fr}}
 
 .menu-pausa{gap:16px}.btn-menu{background:#0b1a20;border:2px solid var(--ciano);border-radius:6px;padding:12px 18px;font-size:.65rem;min-width:260px}.btn-menu:hover{background:#10303a}
+
+.banner-fase{position:absolute;top:34px;left:0;right:0;text-align:center;pointer-events:none;line-height:1.6;animation:banner 4.5s forwards;text-shadow:3px 3px #000}
+.banner-fase small{display:block;font-size:.6rem;color:var(--acido);letter-spacing:.2em}.banner-fase strong{font-size:clamp(1rem,3.4vw,1.9rem);color:#fff}
+@keyframes banner{0%{opacity:0;transform:translateY(-10px)}12%,80%{opacity:1;transform:none}100%{opacity:0}}
+.contagem{position:absolute;top:8px;left:50%;transform:translateX(-50%);background:#000b;border:2px solid var(--amar);border-radius:6px;padding:6px 12px;font-size:.6rem;color:var(--amar);line-height:1.5}
+@media(max-height:680px){.titulo-caixas{display:none}}

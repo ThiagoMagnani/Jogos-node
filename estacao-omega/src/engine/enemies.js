@@ -1,5 +1,6 @@
 import { livre, temLinha } from './raio';
 import { som } from './audio';
+import { salaDe } from './salas';
 
 // Cada tipo de alienígena: vida, velocidade, tamanho, comportamento (ia) e créditos (modo Horda).
 export const TIPOS = {
@@ -84,10 +85,16 @@ export function explodir(j, x, y, raio, dano, ignora, veneno = 0) {
   }
 }
 
+// Ao ser acordado (tiro, explosão...), um inimigo acorda todos os colegas da mesma sala.
+function acordarSala(j, e) {
+  j.inimigos.forEach((o) => { if (!o.morto && o.sala === e.sala && o.tipo !== 'barril') o.desperto = true; });
+}
+
 export function danificar(j, e, n, silencio) {
   if (e.morto) return;
   e.hp -= n;
   e.hurt = 0.12;
+  if (!e.desperto) acordarSala(j, e);
   e.desperto = true;
   if (!silencio) { som.acerto(); j.hit = 0.18; }
   if (e.hp <= 0) { matar(j, e); return; }
@@ -152,7 +159,7 @@ function teleportar(j, e, dmin = 3, dmax = 7) {
 
 export function invocar(j, tipo, x, y, desperto = true) {
   const n = criarInimigo(tipo, Math.floor(x), Math.floor(y), j.horda ? j.horda.escala : 1);
-  n.desperto = desperto; n.invocado = true;
+  n.desperto = desperto; n.invocado = true; n.sala = salaDe(j, n.x, n.y);
   if (!livre(j, n.x, n.y, TIPOS[tipo].raio)) return null;
   j.inimigos.push(n);
   j.estat.total += 1;
@@ -184,7 +191,7 @@ export function atualizarInimigo(j, e, dt) {
   const ang = Math.atan2(dy, dx);
 
   if (!e.desperto) {
-    if (d < 13 && temLinha(j, e.x, e.y, p.x, p.y)) {
+    if (j.salaJogador === e.sala) { // só acorda quando o jogador entra na sala dele
       e.desperto = true;
       if (T.boss) { fala(j, e); }
     }
@@ -321,7 +328,7 @@ export function atualizarProjeteis(j, dt) {
       j.efeitos.push({ x: q.x, y: q.y, tipo: 'puff', t: 0, dur: 0.3, esc: 0.4, lift: 0.3 });
       return false;
     }
-    if (Math.hypot(q.x - p.x, q.y - p.y) < 0.4) {
+    if (p.invul <= 0 && Math.hypot(q.x - p.x, q.y - p.y) < 0.4) {
       danoJogador(j, q.dano);
       if (q.veneno && p.invul <= 0) { p.veneno = Math.max(p.veneno, q.veneno); }
       return false;

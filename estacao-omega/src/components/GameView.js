@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import Hud from './Hud';
 import LojaHorda from './LojaHorda';
-import { criarJogo, atualizar, snapshotCarga, iniciarOnda } from '../engine/game';
+import { criarJogo, atualizar, snapshotCarga } from '../engine/game';
 import { criarRenderizador } from '../engine/raycaster';
 import { gerarTexturas } from '../engine/textures';
 import { gerarSprites } from '../engine/sprites';
@@ -19,7 +19,7 @@ const snapshot = (j) => {
     arma: p.arma, armas: { ...p.armas }, municao: { ...p.municao }, chaves: { ...p.chaves }, veneno: p.veneno > 0,
     dash: Math.max(0, p.dashCd) / p.mod.dashCd, onda: Math.max(0, p.ondaCd) / p.mod.ondaCd,
     tempo: j.tempo, abates: j.estat.abates, total: j.estat.total, nome: j.nome, objetivo: j.objetivo, modo: j.modo,
-    horda: j.horda ? { onda: j.horda.onda, creditos: j.horda.creditos, vivos: j.horda.vivos + j.horda.fila.length } : null,
+    horda: j.horda ? { onda: j.horda.onda, creditos: j.horda.creditos, vivos: j.horda.vivos + j.horda.fila.length, contagem: j.horda.estado === 'pausa' ? Math.ceil(j.horda.contagem) : 0 } : null,
     chefe: (() => { const c = j.inimigos.find((e) => !e.morto && e.desperto && e.hpMax > 400); return c ? c.hp / c.hpMax : null; })(),
     msgs: j.msgs.slice(-3).map((m) => ({ texto: m.texto, tipo: m.tipo })),
   };
@@ -134,8 +134,8 @@ export default function GameView({ modo, fase, carga, onFim, onReiniciar, onTitu
     setAtivo(true);
     try { const r = canvasRef.current.requestPointerLock(); if (r && r.catch) r.catch(() => {}); } catch (e) { /* só teclado */ }
   };
-  const proximaOnda = () => {
-    iniciarOnda(jogoRef.current);
+  const fecharLoja = () => {
+    jogoRef.current.loja = false;
     setLoja(false);
     comecar();
   };
@@ -148,6 +148,13 @@ export default function GameView({ modo, fase, carga, onFim, onReiniciar, onTitu
         <canvas ref={canvasRef} className="canvas" onClick={() => !ativo && !loja && comecar()} />
         <div ref={danoRef} className="flash-dano" />
         {hud && hud.veneno && <div className="flash-veneno" />}
+        {hud && ativo && hud.tempo < 4.5 && (
+          <div className="banner-fase" key={hud.nome}>
+            <small>{hud.modo === 'horda' ? 'MODO HORDA' : 'FASE'}</small>
+            <strong>{hud.nome}</strong>
+          </div>
+        )}
+        {hud && hud.horda && hud.horda.contagem > 0 && ativo && <div className="contagem">PRÓXIMA ONDA EM {hud.horda.contagem}s · LOJA (E)</div>}
         {hud && hud.vida <= 0 && <div className="aviso-fim">VOCÊ MORREU</div>}
         {hud && hud.chefe !== null && <div className="barra-chefe"><i style={{ width: `${Math.max(0, hud.chefe * 100)}%` }} /></div>}
         {!ativo && !loja && (
@@ -168,7 +175,7 @@ export default function GameView({ modo, fase, carga, onFim, onReiniciar, onTitu
             </button>
           )
         )}
-        {loja && jogoRef.current && <LojaHorda jogo={jogoRef.current} onContinuar={proximaOnda} />}
+        {loja && jogoRef.current && <LojaHorda jogo={jogoRef.current} onContinuar={fecharLoja} />}
         <button type="button" className="btn-som" onClick={alternarSom} aria-label="Ligar ou desligar o som">{mudo ? '🔇' : '🔊'}</button>
       </div>
       {hud && <Hud hud={hud} />}

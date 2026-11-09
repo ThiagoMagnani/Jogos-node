@@ -44,7 +44,7 @@ export default function Hud({ hud }) {
             </span>
           </div>
         ) : (
-          <div className="hud-bloco"><span className="hud-rotulo">ONDA {hud.horda.onda}</span><b>💰 {hud.horda.creditos}</b></div>
+          <div className="hud-bloco"><span className="hud-rotulo">ONDA {hud.horda.onda}{hud.horda.contagem > 0 ? ` · ${hud.horda.contagem}s` : ''}</span><b>💰 {hud.horda.creditos}</b></div>
         )}
         <div className="hud-bloco">
           <span className="hud-rotulo">{hud.horda ? 'RESTANTES' : 'ABATES'}</span>

@@ -2,6 +2,7 @@ import { lancarRaio, RES } from './raio';
 import { MW, MH, zonaDe } from './map';
 import { TEX } from './textures';
 import { SPR } from './sprites';
+import { desenharArma } from './armas';
 
 export const LARG = 320;
 export const ALT = 200;
@@ -154,44 +155,6 @@ export function criarRenderizador(canvas, recursos) {
   return { desenhar };
 }
 
-function desenharArma(ctx, p, tempo) {
-  const R = (c, x, y, w, h) => { ctx.fillStyle = c; ctx.fillRect(Math.round(x), Math.round(y), w, h); };
-  const bx = 160 + Math.cos(p.bob) * 5 * p.movendo + (p.inclina || 0);
-  const by = 200 + Math.abs(Math.sin(p.bob)) * 5 * p.movendo + p.recuo * 14;
-  const clar = p.recuo > 0.6;
-  const K = '#07080c';
-  if (p.arma === 'pistola') {
-    R(K, bx - 13, by - 56, 26, 56); R('#5d6672', bx - 11, by - 54, 22, 54); R('#8b97a6', bx - 11, by - 54, 4, 54); R('#39414c', bx - 11, by - 38, 22, 3);
-    R(K, bx - 6, by - 66, 12, 14); R('#2a3038', bx - 4, by - 64, 8, 12); R('#2ab0d8', bx - 3, by - 44, 6, 2);
-    R('#2b2f36', bx - 9, by - 22, 18, 22); R('#15181d', bx - 9, by - 14, 18, 2);
-    if (clar) { R('#fff59d', bx - 9, by - 84, 18, 16); R('#ffb020', bx - 4, by - 94, 8, 14); }
-  } else if (p.arma === 'escopeta') {
-    R(K, bx - 26, by - 74, 52, 74); R('#3a3f47', bx - 24, by - 72, 22, 72); R('#3a3f47', bx + 2, by - 72, 22, 72);
-    R('#6b7480', bx - 22, by - 72, 4, 72); R('#6b7480', bx + 4, by - 72, 4, 72);
-    R('#d83a2a', bx - 20, by - 78, 14, 8); R('#d83a2a', bx + 4, by - 78, 14, 8);
-    R('#23272d', bx - 24, by - 44, 48, 8); R('#7a4a2a', bx - 22, by - 28, 44, 28); R('#4d2c14', bx - 22, by - 28, 44, 4);
-    if (clar) { R('#fff59d', bx - 28, by - 98, 56, 24); R('#ff7a1a', bx - 14, by - 112, 28, 18); }
-  } else if (p.arma === 'pulso') {
-    R(K, bx - 18, by - 78, 36, 78); R('#4a525c', bx - 16, by - 76, 32, 76); R('#8a929c', bx - 16, by - 76, 5, 76);
-    R('#2a3038', bx - 6, by - 90, 12, 16); R('#2ab0d8', bx - 3, by - 70, 6, 34); R('#9ff3ff', bx - 1, by - 66, 2, 26);
-    R('#1a1e24', bx - 16, by - 30, 32, 4); R('#d8a02a', bx + 6, by - 52, 8, 4); R('#2b2f36', bx - 10, by - 20, 20, 20);
-    if (clar) { R('#9ff3ff', bx - 10, by - 104, 20, 16); R('#fff', bx - 4, by - 112, 8, 10); }
-  } else if (p.arma === 'plasma') {
-    R(K, bx - 26, by - 74, 52, 74); R('#5a2a8a', bx - 24, by - 72, 48, 72); R('#8a4fd0', bx - 24, by - 72, 6, 72);
-    R('#2a1248', bx - 24, by - 36, 48, 6); R(K, bx - 14, by - 90, 28, 20); R('#1a0a30', bx - 12, by - 88, 24, 16);
-    const pulso = 0.6 + 0.4 * Math.sin(tempo * 10);
-    R(`rgba(255,77,255,${pulso})`, bx - 8, by - 86, 16, 12); R('#fff', bx - 3, by - 82, 6, 4);
-    R('#b84dff', bx - 4, by - 66, 8, 28); R('#3a1a5a', bx - 22, by - 20, 44, 20);
-    if (clar) { R('#ff4dff', bx - 22, by - 116, 44, 28); R('#fff', bx - 10, by - 124, 20, 14); }
-  } else {
-    R(K, bx - 12, by - 96, 24, 96); R('#9aa4ae', bx - 10, by - 94, 20, 94); R('#d8e0e8', bx - 10, by - 94, 4, 94);
-    R(K, bx - 22, by - 84, 10, 70); R(K, bx + 12, by - 84, 10, 70); R('#5a636e', bx - 20, by - 82, 6, 66); R('#5a636e', bx + 14, by - 82, 6, 66);
-    for (let y = by - 80; y < by - 20; y += 10) { R('#2ab0d8', bx - 8, y, 16, 3); R('#9ff3ff', bx - 4, y, 8, 1); }
-    R('#3a414a', bx - 16, by - 24, 32, 24);
-    if (clar) { R('#9ff3ff', bx - 5, by - 160, 10, 66); R('#fff', bx - 2, by - 160, 4, 66); }
-  }
-}
-
 function desenharMinimapa(ctx, j) {
   const e = 2;
   const ox = LARG - MW * e - 4;
@@ -217,7 +180,7 @@ function desenharMinimapa(ctx, j) {
     for (let x = 0; x < MW; x++) {
       const v = j.grade[y * MW + x];
       if (!v) continue;
-      ctx.fillStyle = v === 7 ? '#ff4040' : v === 8 ? '#4a72d9' : v === 10 ? '#f2c21a' : v === 9 ? '#38ff7a' : v === 14 ? '#ff7a1a' : v === 12 ? '#2ab0d8' : v === 13 ? '#ff6a9a' : v === 5 ? '#6fd6ff' : v === 11 ? '#5a6370' : '#6b7480';
+      ctx.fillStyle = v === 7 ? '#ff4040' : v === 8 ? '#4a72d9' : v === 10 ? '#f2c21a' : v === 9 ? '#38ff7a' : v === 14 ? '#ff7a1a' : v === 12 ? '#8fb0a0' : v === 15 ? '#ffd23b' : v === 13 ? '#ff6a9a' : v === 5 ? '#6fd6ff' : v === 11 ? '#5a6370' : '#6b7480';
       ctx.fillRect(ox + x * e, oy + y * e, e, e);
     }
   }

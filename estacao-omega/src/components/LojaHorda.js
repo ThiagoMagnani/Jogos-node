@@ -13,9 +13,9 @@ export default function LojaHorda({ jogo, onContinuar }) {
   return (
     <div className="loja" role="dialog" aria-label="Loja">
       <header>
-        <h2>ONDA {h.onda} SUPERADA</h2>
+        <h2>LOJA · ONDA {h.onda}</h2>
         <strong className="creditos">💰 {h.creditos}</strong>
-        <button type="button" className="btn-jogar" onClick={onContinuar}>ONDA {h.onda + 1} ▶</button>
+        <button type="button" className="btn-jogar" onClick={onContinuar}>VOLTAR AO JOGO ▶</button>
       </header>
       <p className="aviso-loja">{aviso || 'Gaste seus créditos antes da próxima onda.'}</p>
       <div className="loja-grid">

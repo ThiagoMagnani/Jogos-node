@@ -32,7 +32,9 @@ function finalizar(b, extra) {
     extra.itens = extra.itens.filter(([t]) => !/^(balas|cartuchos|celulas|plasma|trilhos|kit)$/.test(t) || (c++ % 3 !== 2));
   }
   extra.itens = extra.itens.map(([t, x, y]) => [t, ...perto(x, y)]);
-  extra.inimigos = extra.inimigos.map(([t, x, y]) => [t, ...perto(x, y)]);
+  const pertoPorta = (x, y) => { for (let dy = -2; dy <= 2; dy++) for (let dx = -2; dx <= 2; dx++) { const yy = y + dy; const xx = x + dx; if (b.g[yy] && TRANCA[b.g[yy][xx]] !== undefined) return true; } return false; };
+  const afastar = (x, y) => { if (!pertoPorta(x, y)) return [x, y]; for (let r = 1; r < 7; r++) for (let dy = -r; dy <= r; dy++) for (let dx = -r; dx <= r; dx++) if (Math.max(Math.abs(dx), Math.abs(dy)) === r && livreEm(x + dx, y + dy) && !pertoPorta(x + dx, y + dy)) return [x + dx, y + dy]; return [x, y]; };
+  extra.inimigos = extra.inimigos.map(([t, x, y]) => { const q = perto(x, y); return [t, ...(t === 'barril' ? afastar(...q) : q)]; });
   extra.gatilhos = extra.gatilhos.map((g) => ({ ...g, spawns: g.spawns.map(([t, x, y]) => [t, ...perto(x, y)]) }));
   extra.teleportes = extra.teleportes.map((t) => { const [a, c] = perto(t.x, t.y); const [d, e] = perto(t.dx, t.dy); return { x: a, y: c, dx: d, dy: e }; });
 
@@ -369,7 +371,7 @@ export function criarArena() {
   g[1][31] = 13;
   g[30][8] = 13;
   g[30][31] = 13;
-  g[14][1] = 12;
+  g[15][1] = 15; g[16][38] = 15; // máquinas da loja
 
   const spawns = [[4, 15], [4, 16], [35, 15], [35, 16], [20, 3], [19, 3], [20, 28], [19, 28], [8, 4], [31, 27]];
   const itens = [['kit', 12, 15], ['balas', 27, 15]];

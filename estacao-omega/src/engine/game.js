@@ -2,6 +2,7 @@ import { criarFase, criarArena, MW, zonaDe } from './map';
 import { lancarRaio, RES, livre } from './raio';
 import { criarInimigo, atualizarInimigo, atualizarProjeteis, danificar, explodir, mensagem, danoJogador, invocar, TIPOS } from './enemies';
 import { som } from './audio';
+import { calcularSalas, salaDe } from './salas';
 
 export const ARMAS = {
   pistola: { nome: 'Pistola Padrão', mun: 'balas', dano: 16, cd: 0.3, tiros: 1, espalha: 0.01, max: 80, tecla: 1, desc: 'Confiável. Munição barata.' },
@@ -42,11 +43,19 @@ export function criarJogo({ modo = 'campanha', fase = 1, carga = null } = {}) {
     Object.keys(p.municao).forEach((k) => { if (p.armas[k]) p.municao[k] = Math.max(p.municao[k], Math.round(ARMAS[k].max * 0.3)); });
   }
   if (modo === 'horda') {
-    j.horda = { onda: 0, vivos: 0, fila: [], tSpawn: 0, creditos: 0, escala: 1, niveis: {}, estado: 'pausa' };
-    j.loja = true; // a primeira loja abre antes da onda 1
+    j.horda = { onda: 0, vivos: 0, fila: [], tSpawn: 0, creditos: 0, escala: 1, niveis: {}, estado: 'pausa', contagem: 0 };
+    j.horda.contagem = 10; // contagem inicial antes da onda 1 (a loja fica disponível enquanto isso)
+    mensagem(j, 'Prepare-se! Use a LOJA (E) nas paredes antes da onda começar.', 'destaque');
     f.inimigos.forEach(([t, x, y]) => j.inimigos.push(criarInimigo(t, x, y)));
   } else {
     f.inimigos.forEach(([t, x, y]) => j.inimigos.push(criarInimigo(t, x, y)));
+    j.estat.total = j.inimigos.filter((e) => e.tipo !== 'barril').length;
+  }
+  j.salas = calcularSalas(j.grade);
+  j.salaJogador = salaDe(j, j.jogador.x, j.jogador.y);
+  j.inimigos.forEach((e) => { e.sala = salaDe(j, e.x, e.y); });
+  if (modo === 'campanha') { // a sala inicial é segura: nada pula na sua cara ao começar
+    j.inimigos = j.inimigos.filter((e) => e.sala !== j.salaJogador);
     j.estat.total = j.inimigos.filter((e) => e.tipo !== 'barril').length;
   }
   return j;
@@ -64,6 +73,7 @@ export function iniciarOnda(j) {
   h.escala = 1 + 0.08 * (h.onda - 1);
   h.estado = 'combate';
   j.loja = false;
+  Object.assign(j.jogador, { veneno: 0, venAc: 0, acAc: 0, flashDano: 0 }); // nova onda: sem veneno nem outros efeitos
   const pool = [['rastejador', 1], ['infectado', 2], ['cuspidor', 3], ['inchado', 3], ['drone', 4], ['sentinela', 6], ['bruto', 8]].filter(([, w]) => h.onda >= w).map(([t]) => t);
   const n = Math.round(6 + h.onda * 2.5);
   h.fila = [];
@@ -77,7 +87,11 @@ export function iniciarOnda(j) {
 
 function atualizarHorda(j, dt) {
   const h = j.horda;
-  if (h.estado !== 'combate') return;
+  if (h.estado === 'pausa') { // respiro entre ondas: a contagem para enquanto a loja está aberta
+    h.contagem -= dt;
+    if (h.contagem <= 0) iniciarOnda(j);
+    return;
+  }
   h.tSpawn -= dt;
   const maxVivos = Math.min(16, 7 + Math.floor(h.onda / 2));
   if (h.fila.length && h.tSpawn <= 0 && h.vivos < maxVivos) {
@@ -92,12 +106,12 @@ function atualizarHorda(j, dt) {
   }
   if (!h.fila.length && h.vivos <= 0) {
     h.estado = 'pausa';
-    j.loja = true;
+    h.contagem = 10;
     const p = j.jogador;
     p.vida = Math.min(p.vidaMax, p.vida + p.vidaMax * 0.1);
     Object.values(j.estacoes).forEach((s) => { s.cargas = Math.min(3, s.cargas + 1); });
     h.creditos += 20 + h.onda * 5;
-    mensagem(j, `Onda ${h.onda} superada! Visite a loja.`, 'destaque');
+    mensagem(j, `Onda ${h.onda} superada! 10s para respirar — a LOJA (E) está aberta.`, 'destaque');
     som.vitoria();
     try { const m = Number(localStorage.getItem('omega_melhor_onda') || 0); if (h.onda > m) localStorage.setItem('omega_melhor_onda', String(h.onda)); } catch (e) { /* sem storage */ }
   }
@@ -118,7 +132,7 @@ function disparar(j) {
   p.recarga = A.cd * p.mod.cad;
   p.recuo = 1;
   som[p.arma]();
-  j.inimigos.forEach((e) => { if (!e.morto && !e.desperto && Math.hypot(e.x - p.x, e.y - p.y) < 9) e.desperto = true; });
+  j.inimigos.forEach((e) => { if (!e.morto && !e.desperto && e.sala === j.salaJogador) e.desperto = true; });
   const dano = A.dano * p.mod.dano;
   for (let i = 0; i < A.tiros; i++) {
     const a = p.ang + (Math.random() - 0.5) * 2 * A.espalha;
@@ -174,7 +188,9 @@ function usar(j) {
   lancarRaio(j, p.x, p.y, Math.cos(p.ang), Math.sin(p.ang));
   if (RES.dist > 1.9) return;
   const k = RES.cy * MW + RES.cx;
-  if (RES.tipo === 12 && j.terminais[k]) {
+  if (RES.tipo === 15) {
+    if (j.horda && j.horda.estado === 'pausa') { j.loja = true; som.item(); } else mensagem(j, 'A loja está fechada durante a onda!', 'fala');
+  } else if (RES.tipo === 12 && j.terminais[k]) {
     const t = j.terminais[k];
     if (t.usado) { mensagem(j, 'Terminal já ativado.'); return; }
     t.usado = true; som.arma();
@@ -211,7 +227,7 @@ export function atualizar(j, dt, inp) {
   p.ondaCd = Math.max(0, p.ondaCd - dt);
   p.invul = Math.max(0, p.invul - dt);
   if (inp.dash && p.dashCd <= 0) {
-    p.dashCd = p.mod.dashCd; p.dashT = 0.18; p.invul = 0.3;
+    p.dashCd = p.mod.dashCd; p.dashT = 0.22; p.invul = 0.5; // durante o dash as balas inimigas atravessam você
     p.dashDx = len > 0 ? mx / len : Math.cos(p.ang); p.dashDy = len > 0 ? my / len : Math.sin(p.ang);
     som.dash();
   }
@@ -292,7 +308,7 @@ export function atualizar(j, dt, inp) {
     const d = Math.hypot(po.x + 0.5 - p.x, po.y + 0.5 - p.y);
     const t = po.tranca;
     const ok = t === null || (t === 'vermelha' && p.chaves.vermelha) || (t === 'azul' && p.chaves.azul) || (t === 'amarela' && p.chaves.amarela) || (t === 'saida' && j.chefeMorto) || ((t === 'lacre' || t === 'secreta') && po.liberada);
-    const pertoIni = t === null && j.inimigos.some((en) => !en.morto && en.desperto && Math.abs(en.x - po.x - 0.5) < 1.4 && Math.abs(en.y - po.y - 0.5) < 1.4);
+    const pertoIni = t === null && j.inimigos.some((en) => !en.morto && en.desperto && en.tipo !== 'barril' && Math.abs(en.x - po.x - 0.5) < 1.4 && Math.abs(en.y - po.y - 0.5) < 1.4);
     if (d < 1.9 || pertoIni) {
       if (ok) { if (po.alvo === 0) { po.alvo = 1; som.porta(); } }
       else if (po.aviso <= 0 && t !== 'secreta') {
@@ -315,6 +331,8 @@ export function atualizar(j, dt, inp) {
     if (d.arma || d.chave) som.arma(); else som.item();
   });
 
+  const sj = salaDe(j, p.x, p.y);
+  if (sj !== -1) j.salaJogador = sj;
   j.inimigos.forEach((e) => atualizarInimigo(j, e, dt));
   atualizarProjeteis(j, dt);
   if (j.horda) atualizarHorda(j, dt);
@@ -326,4 +344,3 @@ export function atualizar(j, dt, inp) {
   if (j.itens.length > 60) j.itens = j.itens.filter((i) => !i.pego);
 }
 
-export { MW, danoJogador };

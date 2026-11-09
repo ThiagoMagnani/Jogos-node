@@ -96,15 +96,24 @@ const saida = () => pintar((g) => {
   for (let i = 0; i < 3; i++) R(g, '#7dff9a', 12 + i * 20, 50, 12, 3);
 });
 
-// 12 · terminal de computador
+// 12 · terminal (cinza-esverdeado, para ser fácil de achar)
 const terminal = () => pintar((g) => {
   const r = rng(53);
-  R(g, '#242b34', 0, 0, TEX, TEX); R(g, '#12171d', 6, 6, 52, 34); R(g, '#06281d', 8, 8, 48, 30);
-  for (let i = 0; i < 6; i++) { R(g, '#35ff9a', 11, 11 + i * 4, 8 + Math.floor(r() * 30), 2); }
-  R(g, '#35ff9a', 40, 30, 3, 5); R(g, 'rgba(255,255,255,.12)', 8, 8, 48, 6);
-  R(g, '#12171d', 6, 44, 52, 14); for (let i = 0; i < 9; i++) { R(g, '#3b4552', 9 + i * 5, 47, 4, 3); R(g, '#3b4552', 9 + i * 5, 52, 4, 3); }
-  R(g, '#ff3b3b', 4, 1, 4, 3); R(g, '#ffd23b', 10, 1, 4, 3);
-  txt(g, 'USAR [E]', 14, 40, '#9ffbd0', 6);
+  R(g, '#5d7468', 0, 0, TEX, TEX); R(g, '#8fb0a0', 0, 0, TEX, 3); R(g, '#3f5248', 0, 61, TEX, 3);
+  R(g, '#1b2a24', 6, 6, 52, 34); R(g, '#0b3a2a', 8, 8, 48, 30);
+  for (let i = 0; i < 6; i++) R(g, '#9dffd0', 11, 11 + i * 4, 8 + Math.floor(r() * 30), 2);
+  R(g, '#9dffd0', 40, 30, 3, 5); R(g, 'rgba(255,255,255,.14)', 8, 8, 48, 6);
+  R(g, '#1b2a24', 6, 44, 52, 14);
+  for (let i = 0; i < 9; i++) { R(g, '#7f9a8c', 9 + i * 5, 47, 4, 3); R(g, '#7f9a8c', 9 + i * 5, 52, 4, 3); }
+  txt(g, 'USAR [E]', 14, 40, '#d8fff0', 6);
+});
+
+// 15 · máquina da loja (modo Horda)
+const loja = () => pintar((g) => {
+  R(g, '#3b2f12', 0, 0, TEX, TEX); R(g, '#e0a800', 0, 0, TEX, 3); R(g, '#e0a800', 0, 61, TEX, 3);
+  R(g, '#15110a', 6, 6, 52, 34); R(g, '#2a1f05', 8, 8, 48, 30); txt(g, 'LOJA', 18, 12, '#ffd23b', 10);
+  for (let i = 0; i < 4; i++) R(g, '#ffd23b', 12, 24 + i * 4, 10 + i * 8, 2);
+  R(g, '#15110a', 6, 44, 52, 14); R(g, '#ffd23b', 10, 48, 10, 6); R(g, '#35ff9a', 24, 48, 10, 6); R(g, '#ff6a3b', 38, 48, 10, 6);
 });
 
 // 13 · estação médica
@@ -165,7 +174,7 @@ export function gerarTexturas() {
       8: portaCartao('#14307a', '#3f6fe0', 'CARTÃO', '#9cf')(),
       9: saida(),
       10: portaCartao('#8a6a00', '#e0b020', 'CARTÃO', '#ffe27a')(),
-      11: metal(true)(), 12: terminal(), 13: medica(), 14: blindada(),
+      11: metal(true)(), 12: terminal(), 13: medica(), 14: blindada(), 15: loja(),
     },
     acido: acido(),
     temas: {

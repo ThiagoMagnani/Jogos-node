@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
+import { tocarMusica, liberarAudio } from './engine/musica';
 import TelaTitulo from './components/TelaTitulo';
 import GameView from './components/GameView';
 import TelaFase from './components/TelaFase';
@@ -12,6 +13,17 @@ export default function App() {
   const [carga, setCarga] = useState(null); // armas/vida levadas para a próxima fase
   const [fim, setFim] = useState(null);
   const [partida, setPartida] = useState(0); // muda a cada partida para reiniciar o GameView
+
+  // música: título, uma por fase, uma para a Horda. O navegador só libera áudio depois do primeiro clique/tecla.
+  useEffect(() => {
+    tocarMusica(tela === 'titulo' || tela === 'fim' ? 'titulo' : modo === 'horda' ? 'horda' : `fase${fase}`);
+  }, [tela, modo, fase]);
+  useEffect(() => {
+    const liberar = () => liberarAudio();
+    window.addEventListener('pointerdown', liberar);
+    window.addEventListener('keydown', liberar);
+    return () => { window.removeEventListener('pointerdown', liberar); window.removeEventListener('keydown', liberar); };
+  }, []);
 
   const iniciar = (m, f = 1, c = null) => { setModo(m); setFase(f); setCarga(c); setPartida((n) => n + 1); setTela('jogo'); };
 

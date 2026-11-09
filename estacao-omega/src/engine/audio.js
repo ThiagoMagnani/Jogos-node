@@ -3,10 +3,12 @@ let ctx = null;
 let mudo = false;
 let ruido = null;
 
-export const definirMudo = (v) => { mudo = v; };
+export const ouvintesMudo = new Set();
+export const definirMudo = (v) => { mudo = v; ouvintesMudo.forEach((f) => f(v)); };
+export const estaMudo = () => mudo;
 
-function ac() {
-  if (mudo) return null;
+export function ac(forcar = false) {
+  if (mudo && !forcar) return null;
   try {
     if (!ctx) {
       const AC = window.AudioContext || window.webkitAudioContext;
@@ -40,6 +42,8 @@ function estouro(dur, { vol = 0.15, filtro = 1200, ini = 0 } = {}) {
   const g = a.createGain(); g.gain.setValueAtTime(vol, t0); g.gain.exponentialRampToValueAtTime(0.0001, t0 + dur);
   s.connect(f).connect(g).connect(a.destination); s.start(t0); s.stop(t0 + dur + 0.02);
 }
+
+export const bufferRuido = () => ruido;
 
 export const som = {
   escopeta: () => { estouro(0.3, { vol: 0.28, filtro: 2200 }); tom(180, 0.25, { tipo: 'sawtooth', vol: 0.08, ate: 50 }); },
