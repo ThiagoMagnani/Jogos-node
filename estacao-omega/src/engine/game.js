@@ -18,7 +18,7 @@ export const maxMun = (p, k) => Math.round(ARMAS[k].max * p.mod.municao);
 export const novoMod = () => ({ dano: 1, cad: 1, municao: 1, vel: 1, dashCd: 3, ondaDano: 60, ondaCd: 12, regen: 0, vampiro: 0, credito: 1 });
 
 /** opcoes: { modo: 'campanha'|'horda', fase, carga } */
-export function criarJogo({ modo = 'campanha', fase = 1, carga = null } = {}) {
+export function criarJogo({ modo = 'campanha', fase = 1, carga = null, dev = null, infinito = !!(dev && dev.infinito) } = {}) {
   const f = modo === 'horda' ? criarArena() : criarFase(fase);
   const j = {
     modo, fase, nome: f.nome, tema: f.tema, objetivo: f.objetivo,
@@ -43,7 +43,8 @@ export function criarJogo({ modo = 'campanha', fase = 1, carga = null } = {}) {
     Object.keys(p.municao).forEach((k) => { if (p.armas[k]) p.municao[k] = Math.max(p.municao[k], Math.round(ARMAS[k].max * 0.3)); });
   }
   if (modo === 'horda') {
-    j.horda = { onda: 0, vivos: 0, fila: [], tSpawn: 0, creditos: 0, escala: 1, niveis: {}, estado: 'pausa', contagem: 0 };
+    j.horda = { onda: 0, vivos: 0, fila: [], tSpawn: 0, creditos: 0, escala: 1, niveis: {}, estado: 'pausa', contagem: 0, infinito };
+    if (infinito) j.horda.creditos = 999999;
     j.horda.contagem = 10; // contagem inicial antes da onda 1 (a loja fica disponível enquanto isso)
     mensagem(j, 'Prepare-se! Use a LOJA (E) nas paredes antes da onda começar.', 'destaque');
     f.inimigos.forEach(([t, x, y]) => j.inimigos.push(criarInimigo(t, x, y)));
@@ -51,11 +52,12 @@ export function criarJogo({ modo = 'campanha', fase = 1, carga = null } = {}) {
     f.inimigos.forEach(([t, x, y]) => j.inimigos.push(criarInimigo(t, x, y)));
     j.estat.total = j.inimigos.filter((e) => e.tipo !== 'barril').length;
   }
+  if (dev && dev.arsenal) { const p = j.jogador; Object.keys(ARMAS).forEach((k) => { p.armas[k] = true; p.municao[k] = maxMun(p, k); }); }
   j.salas = calcularSalas(j.grade);
   j.salaJogador = salaDe(j, j.jogador.x, j.jogador.y);
   j.inimigos.forEach((e) => { e.sala = salaDe(j, e.x, e.y); });
-  if (modo === 'campanha') { // a sala inicial é segura: nada pula na sua cara ao começar
-    j.inimigos = j.inimigos.filter((e) => e.sala !== j.salaJogador);
+  if (modo === 'campanha') { // na sala inicial não há rastejadores (rápidos) pulando em você ao começar
+    j.inimigos = j.inimigos.filter((e) => e.sala !== j.salaJogador || e.tipo !== 'rastejador');
     j.estat.total = j.inimigos.filter((e) => e.tipo !== 'barril').length;
   }
   return j;
@@ -87,6 +89,7 @@ export function iniciarOnda(j) {
 
 function atualizarHorda(j, dt) {
   const h = j.horda;
+  if (h.infinito) h.creditos = 999999;
   if (h.estado === 'pausa') { // respiro entre ondas: a contagem para enquanto a loja está aberta
     h.contagem -= dt;
     if (h.contagem <= 0) iniciarOnda(j);
@@ -242,8 +245,7 @@ export function atualizar(j, dt, inp) {
       const d = Math.hypot(e.x - p.x, e.y - p.y);
       if (d > 4.5) return;
       danificar(j, e, dano * (1 - d / 6), true);
-      e.hurt = 0.3;
-      j.efeitos.push({ x: e.x, y: e.y, tipo: 'acerto', t: 0, dur: 0.5, esc: 1.0, lift: 0.4 });
+      e.azul = 0.35; // pisca azul ao levar o dano da onda
       const k = d > 0.01 ? 1.6 / d : 0;
       const nx = e.x + (e.x - p.x) * k; const ny = e.y + (e.y - p.y) * k;
       if (!TIPOS[e.tipo].boss && livre(j, nx, ny, TIPOS[e.tipo].raio)) { e.x = nx; e.y = ny; }

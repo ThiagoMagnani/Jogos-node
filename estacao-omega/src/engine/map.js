@@ -94,7 +94,7 @@ function fase1() {
   g[4][38] = 9;
 
   const inimigos = [
-    ['rastejador', 6, 26], ['rastejador', 11, 27], ['infectado', 13, 25],
+    ['infectado', 11, 27], ['infectado', 13, 25],
     ['rastejador', 23, 23], ['infectado', 22, 26], ['cuspidor', 34, 24], ['rastejador', 25, 28], ['infectado', 35, 28], ['cuspidor', 31, 22],
     ['barril', 21, 23], ['barril', 36, 23], ['barril', 9, 18],
     ['rastejador', 5, 16], ['infectado', 10, 17], ['rastejador', 13, 19], ['cuspidor', 4, 20], ['inchado', 11, 15],

@@ -100,3 +100,8 @@ html:has(.jogo),body:has(.jogo){overflow:hidden}
 @keyframes banner{0%{opacity:0;transform:translateY(-10px)}12%,80%{opacity:1;transform:none}100%{opacity:0}}
 .contagem{position:absolute;top:8px;left:50%;transform:translateX(-50%);background:#000b;border:2px solid var(--amar);border-radius:6px;padding:6px 12px;font-size:.6rem;color:var(--amar);line-height:1.5}
 @media(max-height:680px){.titulo-caixas{display:none}}
+.vol{display:flex;gap:10px;align-items:center;font-size:.6rem;line-height:1}.vol input{width:150px;accent-color:var(--ciano)}
+.dev-btn{position:absolute;right:6px;bottom:4px;width:14px;height:14px;opacity:.18;background:none;border:0;color:#fff;font-size:.5rem;padding:0}.dev-btn:hover{opacity:.6}
+.dev{position:absolute;right:8px;bottom:24px;z-index:5;background:#000d;border:2px solid var(--amar);border-radius:6px;padding:10px;display:flex;flex-direction:column;gap:8px;font-size:.5rem;text-align:left;line-height:1.5}
+.dev input[type=password],.dev input[type=text]{font:inherit;background:#111;color:#fff;border:1px solid #fff4;padding:4px}
+.dev div{display:flex;gap:6px;flex-wrap:wrap}.dev button{font-size:.5rem;background:#0b1a20;border:1px solid var(--ciano);padding:5px 8px;border-radius:4px}.dev label{display:flex;gap:6px;align-items:center}

@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 
 const BICHOS = [
   ['🪲', 'Rastejador', 'Rápido e em bando'], ['🧟', 'Infectado', 'Lento, bate forte'], ['🟣', 'Cuspidor', 'Ácido que envenena'],
@@ -7,7 +7,12 @@ const BICHOS = [
 ];
 
 /** Tela inicial: escolha entre Campanha e Horda. */
-export default function TelaTitulo({ onCampanha, onHorda }) {
+export default function TelaTitulo({ onCampanha, onHorda, onNovo, faseSalva, onDev }) {
+  const [aberto, setAberto] = useState(false);
+  const [senha, setSenha] = useState('');
+  const [infinito, setInfinito] = useState(true);
+  const [arsenal, setArsenal] = useState(true);
+  const liberado = senha === 'thiagolindo';
   let melhor = 0;
   try { melhor = Number(localStorage.getItem('omega_melhor_onda') || 0); } catch (e) { /* sem storage */ }
   return (
@@ -21,7 +26,8 @@ export default function TelaTitulo({ onCampanha, onHorda }) {
       </p>
       <div className="modos">
         <button type="button" className="modo" onClick={onCampanha}>
-          <strong>CAMPANHA</strong><span>3 fases · 3 chefes · segredos, cartões, terminais e teletransportes</span>
+          <strong>{faseSalva > 1 ? `CONTINUAR · FASE ${faseSalva}` : 'CAMPANHA'}</strong><span>4 fases · 3 chefes · segredos, cartões, terminais e teletransportes</span>
+          {faseSalva > 1 && <small onClick={(e) => { e.stopPropagation(); onNovo(); }} role="button" tabIndex={0}>↺ começar do zero</small>}
         </button>
         <button type="button" className="modo horda" onClick={onHorda}>
           <strong>HORDA</strong><span>Ondas infinitas · ganhe créditos · melhore armas, poderes e vida</span>
@@ -42,6 +48,20 @@ export default function TelaTitulo({ onCampanha, onHorda }) {
           </ul>
         </section>
       </div>
+      <button type="button" className="dev-btn" onClick={() => setAberto(!aberto)} aria-label="opções do desenvolvedor">·</button>
+      {aberto && (
+        <div className="dev">
+          <input type="password" placeholder="código" value={senha} onChange={(e) => setSenha(e.target.value)} />
+          {liberado && (
+            <>
+              <div>{[1, 2, 3, 4].map((n) => <button type="button" key={n} onClick={() => onDev({ modo: 'campanha', fase: n, dev: { arsenal } })}>FASE {n}</button>)}</div>
+              <label><input type="checkbox" checked={arsenal} onChange={(e) => setArsenal(e.target.checked)} /> arsenal completo</label>
+              <label><input type="checkbox" checked={infinito} onChange={(e) => setInfinito(e.target.checked)} /> dinheiro infinito (Horda)</label>
+              <div><button type="button" onClick={() => onDev({ modo: 'horda', fase: 1, dev: { arsenal, infinito } })}>HORDA</button></div>
+            </>
+          )}
+        </div>
+      )}
     </main>
   );
 }

@@ -29,6 +29,7 @@ export const nivelDe = (j, id) => j.horda.niveis[id] || 0;
 export function comprar(j, tipo, id, ARMAS, maxMun) {
   const p = j.jogador;
   const h = j.horda;
+  if (h.infinito) h.creditos = 999999;
   if (tipo === 'up') {
     const u = UPGRADES.find((x) => x.id === id);
     const n = nivelDe(j, id);

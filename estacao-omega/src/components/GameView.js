@@ -6,6 +6,7 @@ import { criarRenderizador } from '../engine/raycaster';
 import { gerarTexturas } from '../engine/textures';
 import { gerarSprites } from '../engine/sprites';
 import { definirMudo } from '../engine/audio';
+import { volumeMusica, definirVolumeMusica, musicaMutada, mutarMusica } from '../engine/musica';
 
 const TECLAS = {
   KeyW: 'frente', ArrowUp: 'frente', KeyS: 'tras', ArrowDown: 'tras',
@@ -29,7 +30,7 @@ const snapshot = (j) => {
  * O jogo em si: <canvas> 320x200 + HUD em React. O estado vive num useRef (60 atualizações/s sem re-render);
  * só o HUD usa useState (~10x por segundo).
  */
-export default function GameView({ modo, fase, carga, onFim, onReiniciar, onTitulo }) {
+export default function GameView({ modo, fase, carga, dev, onFim, onReiniciar, onTitulo }) {
   const canvasRef = useRef(null);
   const danoRef = useRef(null);
   const jogoRef = useRef(null);
@@ -39,10 +40,12 @@ export default function GameView({ modo, fase, carga, onFim, onReiniciar, onTitu
   const [hud, setHud] = useState(null);
   const [mudo, setMudo] = useState(false);
   const [loja, setLoja] = useState(false);
+  const [vol, setVol] = useState(volumeMusica());
+  const [musMuda, setMusMuda] = useState(musicaMutada());
 
   useEffect(() => {
     const canvas = canvasRef.current;
-    const j = criarJogo({ modo, fase, carga });
+    const j = criarJogo({ modo, fase, carga, dev });
     jogoRef.current = j;
     if (window.__JOGO_DEBUG__) window.__jogo = j;
     const render = criarRenderizador(canvas, { texturas: gerarTexturas(), sprites: gerarSprites() });
@@ -162,6 +165,10 @@ export default function GameView({ modo, fase, carga, onFim, onReiniciar, onTitu
             <div className="pausa menu-pausa">
               <strong>⏸ PAUSADO</strong>
               <button type="button" className="btn-jogar" onClick={comecar}>CONTINUAR</button>
+              <label className="vol">🎵 MÚSICA
+                <input type="range" min="0" max="100" value={Math.round(vol * 100)} onChange={(e) => { const x = e.target.value / 100; setVol(x); definirVolumeMusica(x); }} />
+              </label>
+              <button type="button" className="btn-menu" onClick={() => { mutarMusica(!musMuda); setMusMuda(!musMuda); }}>{musMuda ? '🔇 MÚSICA: DESLIGADA' : '🔊 MÚSICA: LIGADA'}</button>
               <button type="button" className="btn-menu" onClick={onReiniciar}>↻ REINICIAR {modo === 'horda' ? 'A HORDA' : 'A FASE'}</button>
               <button type="button" className="btn-menu" onClick={onTitulo}>⌂ VOLTAR À TELA INICIAL</button>
               <small>WASD andar · mouse mirar · clique atira · 1-5 armas · E usar · Q dash · F onda de choque · M mapa</small>

@@ -37,7 +37,18 @@ function punho(ctx, bx, y) {
   ret(ctx, '#222c26', bx - 16, y + 12, 32, 2);
 }
 
+// [largura, altura]: a altura é achatada para imitar o encurtamento visto de trás (como no Doom): arma baixa e larga, sem cano esticado para cima
+const ESCALA = { pistola: [0.62, 0.36], escopeta: [0.56, 0.32], pulso: [0.56, 0.32], plasma: [0.5, 0.3], trilho: [0.46, 0.28] }; // [largura, altura]: cano curto e baixo, como no Doom
+
 export function desenharArma(ctx, p, tempo) {
+  const [ex, ey] = ESCALA[p.arma];
+  ctx.save();
+  ctx.translate(160, 200); ctx.scale(ex, ey); ctx.translate(-160, -200);
+  desenharArmaBase(ctx, p, tempo);
+  ctx.restore();
+}
+
+function desenharArmaBase(ctx, p, tempo) {
   const bx = 160 + Math.cos(p.bob) * 5 * p.movendo + (p.inclina || 0);
   const by = 202 + Math.abs(Math.sin(p.bob)) * 5 * p.movendo + p.recuo * 14;
   const fogo = p.recuo > 0.6;

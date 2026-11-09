@@ -132,7 +132,7 @@ function matar(j, e) {
   const vamp = j.jogador.mod.vampiro;
   if (vamp) j.jogador.vida = Math.min(j.jogador.vidaMax, j.jogador.vida + vamp);
   if (e.tipo === 'inchado') explodir(j, e.x, e.y, 2.3, 34, e, 3);
-  j.efeitos.push({ x: e.x, y: e.y, tipo: 'mancha', t: 0, dur: 6, esc: 0.7, lift: 0 });
+  j.efeitos.push({ x: e.x, y: e.y, tipo: 'mancha', t: 0, dur: 1.8, esc: 0.7, lift: 0 });
   soltar(j, e);
   if (T.boss) {
     j.chefeMorto = true;
@@ -176,12 +176,13 @@ const fala = (j, e) => { const l = FALAS[e.tipo]; mensagem(j, `${TIPOS[e.tipo].n
 
 /** Atualiza um inimigo por `dt` segundos. */
 export function atualizarInimigo(j, e, dt) {
-  if (e.morto) { e.tMorte += dt; e.hurt = 0; return; }
+  if (e.morto) { e.tMorte += dt; e.hurt = 0; e.azul = 0; return; }
   const T = TIPOS[e.tipo];
   if (T.ia === 'estatico') { e.hurt = Math.max(0, e.hurt - dt); return; }
   const p = j.jogador;
   e.t += dt;
   e.hurt = Math.max(0, e.hurt - dt);
+  e.azul = Math.max(0, (e.azul || 0) - dt);
   e.atq = Math.max(0, e.atq - dt);
   e.cd -= dt;
   e.cdMelee -= dt;

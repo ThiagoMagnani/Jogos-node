@@ -91,16 +91,15 @@ export function criarRenderizador(canvas, recursos) {
     const lista = [];
     j.itens.forEach((it) => {
       if (it.pego) return;
-      if (/^(cartao_|arma_|fragmento)/.test(it.tipo)) { // itens importantes brilham e flutuam
-        const pul = Math.sin(tempo * 4 + it.x);
-        lista.push({ x: it.x, y: it.y, tex: S.item.halo, esc: 1.0 + pul * 0.08, lift: 0.0, sq: 1, fl: 0, bias: 0.02 });
-        lista.push({ x: it.x, y: it.y, tex: S.item[it.tipo], esc: 0.5, lift: 0.1 + pul * 0.03, sq: 1, fl: 40 + pul * 30 });
+      if (/^(cartao_|arma_|fragmento)/.test(it.tipo)) { // itens importantes piscam mais claros
+        const pisca = Math.max(0, Math.sin(tempo * 6 + it.x));
+        lista.push({ x: it.x, y: it.y, tex: S.item[it.tipo], esc: 0.5, lift: 0, sq: 1, fl: 15 + pisca * 110 });
       } else lista.push({ x: it.x, y: it.y, tex: S.item[it.tipo], esc: 0.5, lift: 0, sq: 1, fl: 0 });
     });
     j.inimigos.forEach((e) => {
       const frame = e.morto ? 0 : e.tipo === 'barril' ? 0 : e.atq > 0 ? 2 : Math.floor(e.t * 4) % 2;
       const sq = e.morto ? Math.max(0.28, 1 - e.tMorte * 3) : 1;
-      lista.push({ x: e.x, y: e.y, tex: S.inim[e.tipo][frame], esc: e.esc, lift: e.morto ? 0 : e.lift + Math.sin(e.t * 3) * (e.lift ? 0.03 : 0), sq, fl: e.hurt > 0 ? 130 : 0, morto: e.morto });
+      lista.push({ x: e.x, y: e.y, tex: S.inim[e.tipo][frame], esc: e.esc, lift: e.morto ? 0 : e.lift + Math.sin(e.t * 3) * (e.lift ? 0.03 : 0), sq, fl: e.hurt > 0 ? 130 : 0, fa: e.azul > 0 ? 170 : 0, morto: e.morto });
     });
     j.teleportes.forEach((t) => lista.push({ x: t.x + 0.5, y: t.y + 0.5, tex: S.item.portal, esc: 0.9, lift: 0, sq: 1, fl: 30 + Math.sin(tempo * 6) * 20 }));
     j.projeteis.forEach((q) => lista.push({ x: q.x, y: q.y, tex: S.proj[q.tipo], esc: 0.4, lift: 0.3, sq: 1, fl: 0 }));
@@ -135,8 +134,8 @@ export function criarRenderizador(canvas, recursos) {
           const a = s.tex[ti + 3];
           if (a < 100) continue;
           let r = s.tex[ti] * f + FOG[0] * (1 - f) + s.fl;
-          let g = s.tex[ti + 1] * f + FOG[1] * (1 - f) + s.fl;
-          let b = s.tex[ti + 2] * f + FOG[2] * (1 - f) + s.fl;
+          let g = s.tex[ti + 1] * f + FOG[1] * (1 - f) + s.fl + (s.fa || 0) * 0.45;
+          let b = s.tex[ti + 2] * f + FOG[2] * (1 - f) + s.fl + (s.fa || 0);
           if (a < 230) { const o = buf[y * LARG + x]; r = (r + (o & 255)) / 2; g = (g + ((o >> 8) & 255)) / 2; b = (b + ((o >> 16) & 255)) / 2; }
           buf[y * LARG + x] = cor(Math.min(255, r) | 0, Math.min(255, g) | 0, Math.min(255, b) | 0);
         }
