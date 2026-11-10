@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { DIFICULDADES } from '../engine/campeonato';
+import { useAudio } from './ControleSom';
 
 const RIVAIS = [
   ['🏎️', 'Rafa Nitro', 'Usa nitro em toda reta'],
@@ -14,6 +15,7 @@ const RIVAIS = [
 /** Tela inicial: continuar, novo campeonato (com escolha de dificuldade), controles e rivais. */
 export default function TelaTitulo({ save, onContinuar, onNovo }) {
   const [etapa, setEtapa] = useState('menu'); // menu | confirmar | dificuldade
+  const audio = useAudio();
 
   const novo = () => setEtapa(save ? 'confirmar' : 'dificuldade');
 
@@ -29,6 +31,8 @@ export default function TelaTitulo({ save, onContinuar, onNovo }) {
         Ganhe grana em corridas contra pilotos <em>difíceis de verdade</em>, melhore o motor, o nitro e os pneus do seu carro
         e suba no campeonato. Quanto mais forte o grid, mais caro o prêmio.
       </p>
+
+      {!audio.pronto && audio.musica && <p className="dica-som">🎵 Clique ou aperte qualquer tecla para ligar a música</p>}
 
       {etapa === 'menu' && (
         <div className="titulo-botoes">
@@ -69,7 +73,8 @@ export default function TelaTitulo({ save, onContinuar, onNovo }) {
             <li><kbd>↑</kbd> ou <kbd>W</kbd> acelerar · <kbd>↓</kbd> ou <kbd>S</kbd> freio/ré</li>
             <li><kbd>Shift</kbd> nitro (gasta o tanque)</li>
             <li><kbd>Espaço</kbd> freio de mão: derrape nas curvas fechadas</li>
-            <li><kbd>R</kbd> volta para a pista · <kbd>Esc</kbd> pausa · <kbd>M</kbd> som</li>
+            <li><kbd>R</kbd> volta para a pista · <kbd>Esc</kbd> pausa (com opções de som)</li>
+            <li><kbd>M</kbd> liga/desliga a música · <kbd>V</kbd> liga/desliga os sons dos carros</li>
             <li>Ande colado atrás de alguém para pegar o <b>vácuo</b>.</li>
           </ul>
         </div>

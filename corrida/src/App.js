@@ -1,9 +1,11 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import TelaTitulo from './components/TelaTitulo';
 import Campeonato from './components/Campeonato';
 import Garagem from './components/Garagem';
 import Corrida from './components/Corrida';
 import Resultado from './components/Resultado';
+import ControleSom from './components/ControleSom';
+import { prepararAudio, tocarMusica } from './engine/audio';
 import { carregarSave, salvar, novoSave, registrarCorrida } from './engine/salvamento';
 import { FASES, calcularPremio, faseLiberada } from './engine/campeonato';
 
@@ -17,6 +19,13 @@ export default function App() {
   const [fase, setFase] = useState(null);
   const [partida, setPartida] = useState(0); // muda a cada corrida para reiniciar o componente
   const [fim, setFim] = useState(null);
+
+  // a música troca conforme a tela (a da corrida começa dentro do componente Corrida, ao largar)
+  useEffect(() => { prepararAudio(); }, []);
+  useEffect(() => {
+    if (tela === 'titulo') tocarMusica('titulo');
+    else if (tela !== 'corrida') tocarMusica('garagem');
+  }, [tela]);
 
   const atualizarSave = useCallback((fn) => {
     setSave((s) => { const n = fn(s); if (n !== s) salvar(n); return n; });
@@ -41,6 +50,7 @@ export default function App() {
 
   return (
     <div className="app">
+      {tela !== 'corrida' && <ControleSom variante="fixo" />}
       {tela === 'titulo' && <TelaTitulo save={save} onContinuar={() => setTela('campeonato')} onNovo={novoJogo} />}
       {tela === 'campeonato' && save && (
         <Campeonato save={save} onCorrer={correr} onGaragem={() => setTela('garagem')} onMenu={() => setTela('titulo')} />

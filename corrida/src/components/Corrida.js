@@ -2,7 +2,11 @@ import React, { useEffect, useRef, useState } from 'react';
 import Hud from './Hud';
 import { criarCorrida, avancar, snapshot } from '../engine/corrida';
 import { criarRenderizador } from '../engine/render';
-import { iniciarMotor, atualizarSom, pararSons, definirMudo, somBip, somBatida, somParede, somVolta, somUltrap, somChegada } from '../engine/audio';
+import ControleSom from './ControleSom';
+import {
+  iniciarMotor, atualizarSom, pararMotor, tocarMusica, duckMusica, definirIntensidade, alternarMusica, alternarSons,
+  somBip, somBatida, somParede, somVolta, somUltrap, somChegada,
+} from '../engine/audio';
 
 const TECLAS = {
   ArrowLeft: 'esq', KeyA: 'esq', ArrowRight: 'dir', KeyD: 'dir', ArrowUp: 'acel', KeyW: 'acel',
@@ -23,11 +27,11 @@ export default function Corrida({ fase, save, onFim, onSair }) {
   const [hud, setHud] = useState(null);
   const [iniciou, setIniciou] = useState(false);
   const [pausado, setPausado] = useState(false);
-  const [mudo, setMudo] = useState(false);
 
   const iniciar = () => {
     if (ctrl.current.rodando) return;
     iniciarMotor();
+    tocarMusica('corrida');
     ctrl.current.rodando = true;
     setIniciou(true);
   };
@@ -35,8 +39,8 @@ export default function Corrida({ fase, save, onFim, onSair }) {
     if (!ctrl.current.rodando) return;
     ctrl.current.pausado = !ctrl.current.pausado;
     setPausado(ctrl.current.pausado);
+    duckMusica(ctrl.current.pausado); // na pausa a música fica baixinha
   };
-  const alternarSom = () => { const m = !mudo; setMudo(m); definirMudo(m); };
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -50,7 +54,8 @@ export default function Corrida({ fase, save, onFim, onSair }) {
     const aoTecla = (e, valor) => {
       if (e.code === 'Enter' && valor && !ctrl.current.rodando) { iniciar(); e.preventDefault(); return; }
       if ((e.code === 'Escape' || e.code === 'KeyP') && valor) { alternarPausa(); e.preventDefault(); return; }
-      if (e.code === 'KeyM' && valor) { alternarSom(); return; }
+      if (e.code === 'KeyM' && valor) { alternarMusica(); return; }
+      if (e.code === 'KeyV' && valor) { alternarSons(); return; }
       if (e.code === 'KeyR' && valor) { reset.current = true; return; }
       const k = TECLAS[e.code];
       if (k) { teclas.current[k] = valor; e.preventDefault(); }
@@ -101,7 +106,12 @@ export default function Corrida({ fase, save, onFim, onSair }) {
       corr.ev = {};
       render.desenhar(corr, dt);
       acumHud += dt;
-      if (acumHud > 0.09) { acumHud = 0; setHud(snapshot(corr)); }
+      if (acumHud > 0.09) {
+        acumHud = 0;
+        const snap = snapshot(corr);
+        setHud(snap);
+        definirIntensidade(snap.estado === 'correndo' && snap.volta === snap.voltas ? 1 : 0); // última volta: entra a melodia
+      }
       if (corr.estado === 'fim' && !terminou) { terminou = true; setTimeout(() => onFim(corr.resultado), 300); }
     };
     raf = requestAnimationFrame(loop);
@@ -112,7 +122,9 @@ export default function Corrida({ fase, save, onFim, onSair }) {
       window.removeEventListener('keydown', baixo);
       window.removeEventListener('keyup', cima);
       window.removeEventListener('blur', perdeuFoco);
-      pararSons();
+      pararMotor();
+      duckMusica(false);
+      definirIntensidade(0);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -134,13 +146,14 @@ export default function Corrida({ fase, save, onFim, onSair }) {
           <div className="pausa">
             <strong>PAUSA</strong>
             <button type="button" className="btn-jogar" onClick={alternarPausa}>▶ CONTINUAR</button>
+            <ControleSom variante="menu" />
             <button type="button" className="btn-link" onClick={onSair}>Abandonar corrida</button>
           </div>
         )}
-        <button type="button" className="btn-som" onClick={alternarSom} aria-label={mudo ? 'Ligar som' : 'Desligar som'}>{mudo ? '🔇' : '🔊'}</button>
+        <ControleSom variante="sobre" />
       </div>
       <p className="controles-linha">
-        <kbd>← →</kbd> virar · <kbd>↑</kbd> acelerar · <kbd>↓</kbd> freio/ré · <kbd>Shift</kbd> nitro · <kbd>Espaço</kbd> freio de mão (derrapar) · <kbd>R</kbd> voltar à pista · <kbd>Esc</kbd> pausa · <kbd>M</kbd> som
+        <kbd>← →</kbd> virar · <kbd>↑</kbd> acelerar · <kbd>↓</kbd> freio/ré · <kbd>Shift</kbd> nitro · <kbd>Espaço</kbd> freio de mão (derrapar) · <kbd>R</kbd> voltar à pista · <kbd>Esc</kbd> pausa · <kbd>M</kbd> música · <kbd>V</kbd> sons
       </p>
     </div>
   );
