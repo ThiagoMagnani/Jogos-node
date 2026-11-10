@@ -1,0 +1,9 @@
+{
+  "short_name": "Asfalto Neon",
+  "name": "Asfalto Neon - Racha Clandestino",
+  "icons": [{ "src": "favicon.svg", "type": "image/svg+xml", "sizes": "any" }],
+  "start_url": ".",
+  "display": "standalone",
+  "theme_color": "#0d0618",
+  "background_color": "#0d0618"
+}
