@@ -15,7 +15,7 @@ const MUN_ITEM = { balas: ['pistola', 14], cartuchos: ['escopeta', 5], celulas: 
 const ARMA_ITEM = { arma_escopeta: ['escopeta', 8], arma_pulso: ['pulso', 40], arma_plasma: ['plasma', 5], arma_trilho: ['trilho', 3] };
 export const maxMun = (p, k) => Math.round(ARMAS[k].max * p.mod.municao);
 
-export const novoMod = () => ({ dano: 1, cad: 1, municao: 1, vel: 1, dashCd: 3, ondaDano: 60, ondaCd: 12, regen: 0, vampiro: 0, credito: 1 });
+export const novoMod = () => ({ dano: 1, cad: 1, municao: 1, vel: 1, dashCd: 1.6, ondaDano: 60, ondaCd: 12, regen: 0, vampiro: 0, credito: 1 });
 
 /** opcoes: { modo: 'campanha'|'horda', fase, carga } */
 export function criarJogo({ modo = 'campanha', fase = 1, carga = null, dev = null, infinito = !!(dev && dev.infinito) } = {}) {
@@ -53,6 +53,7 @@ export function criarJogo({ modo = 'campanha', fase = 1, carga = null, dev = nul
     j.estat.total = j.inimigos.filter((e) => e.tipo !== 'barril').length;
   }
   if (dev && dev.arsenal) { const p = j.jogador; Object.keys(ARMAS).forEach((k) => { p.armas[k] = true; p.municao[k] = maxMun(p, k); }); }
+  if (fase === 5 && modo === 'campanha') j.inimigos.forEach((e) => { if (TIPOS[e.tipo].boss) e.dorme = true; });
   j.salas = calcularSalas(j.grade);
   j.salaJogador = salaDe(j, j.jogador.x, j.jogador.y);
   j.inimigos.forEach((e) => { e.sala = salaDe(j, e.x, e.y); });

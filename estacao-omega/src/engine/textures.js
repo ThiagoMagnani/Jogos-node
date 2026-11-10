@@ -117,10 +117,13 @@ const loja = () => pintar((g) => {
 });
 
 // 13 · estação médica
-const medica = () => pintar((g) => {
+// a barra mostra as cargas que restam (3 segmentos verdes; vazia = tudo apagado e a cruz fica cinza)
+const medica = (cargas = 3) => () => pintar((g) => {
   R(g, '#d8dde2', 0, 0, TEX, TEX); R(g, '#9aa3ab', 0, 0, TEX, 3); R(g, '#9aa3ab', 0, 61, TEX, 3);
-  R(g, '#e53935', 24, 8, 16, 40); R(g, '#e53935', 12, 20, 40, 16); R(g, '#fff', 28, 12, 8, 32); R(g, '#fff', 16, 24, 32, 8);
-  R(g, '#12171d', 8, 50, 48, 10); R(g, '#35ff9a', 10, 52, 22, 6); txt(g, '+HP', 36, 52, '#9ffbd0', 6);
+  const cruz = cargas > 0 ? '#e53935' : '#8d9399';
+  R(g, cruz, 24, 8, 16, 36); R(g, cruz, 12, 18, 40, 16); R(g, '#fff', 28, 12, 8, 28); R(g, '#fff', 16, 22, 32, 8);
+  R(g, '#12171d', 6, 46, 52, 14);
+  for (let i = 0; i < 3; i++) R(g, i < cargas ? '#35ff9a' : '#2a3038', 9 + i * 16, 49, 14, 8);
   R(g, 'rgba(0,0,0,.12)', 0, 0, 3, TEX);
 });
 
@@ -174,7 +177,7 @@ export function gerarTexturas() {
       8: portaCartao('#14307a', '#3f6fe0', 'CARTÃO', '#9cf')(),
       9: saida(),
       10: portaCartao('#8a6a00', '#e0b020', 'CARTÃO', '#ffe27a')(),
-      11: metal(true)(), 12: terminal(), 13: medica(), 14: blindada(), 15: loja(),
+      11: metal(true)(), 12: terminal(), 13: medica(3)(), 20: medica(0)(), 21: medica(1)(), 22: medica(2)(), 14: blindada(), 15: loja(),
     },
     acido: acido(),
     temas: {

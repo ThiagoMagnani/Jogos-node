@@ -7,7 +7,7 @@ const TRANCA = { 5: null, 7: 'vermelha', 8: 'azul', 10: 'amarela', 9: 'saida', 1
 
 // O labirinto é dividido em 5 zonas de mapa: 4 quadrantes + centro (cada fragmento revela uma)
 export const zonaDe = (x, y) => (x >= 13 && x <= 26 && y >= 9 && y <= 22 ? 4 : (y < 16 ? 0 : 2) + (x < 20 ? 0 : 1));
-export const NOMES_FASE = ['', 'Hangar 7', 'Laboratório Colmeia', 'Os Dutos', 'Núcleo Ômega'];
+export const NOMES_FASE = ['', 'Hangar 7', 'Laboratório Colmeia', 'Os Dutos', 'Núcleo Ômega', 'Ninho de Ômega'];
 
 function construtor() {
   const g = Array.from({ length: MH }, () => Array(MW).fill(1));
@@ -27,7 +27,7 @@ function finalizar(b, extra) {
     for (let r = 1; r < 5; r++) for (let dy = -r; dy <= r; dy++) for (let dx = -r; dx <= r; dx++) if (Math.max(Math.abs(dx), Math.abs(dy)) === r && livreEm(x + dx, y + dy)) return [x + dx, y + dy];
     return [x, y];
   };
-  if (!extra.ruido && extra.nome !== 'Arena Ômega') { // suprimentos mais escassos: some 1 de cada 3 caixas de munição/kits
+  if (!extra.ruido && extra.nome !== 'Arena Ômega' && !extra.cheio) { // suprimentos mais escassos: some 1 de cada 3 caixas de munição/kits
     let c = 0;
     extra.itens = extra.itens.filter(([t]) => !/^(balas|cartuchos|celulas|plasma|trilhos|kit)$/.test(t) || (c++ % 3 !== 2));
   }
@@ -258,16 +258,18 @@ function fase3() {
     const c = cand[Math.floor(rnd() * cand.length)];
     if (c) { itens.push(['fragmento', c.x, c.y]); usados.add(c.y * MW + c.x); }
   }
-  const suprimentos = ['balas', 'kit', 'cartuchos', 'celulas', 'kit', 'plasma', 'kitG', 'escudo', 'cartuchos', 'balas', 'celulas', 'kit', 'trilhos', 'kit', 'kit', 'kitG', 'kit', 'escudo', 'kit', 'kitG'];
+  const suprimentos = ['balas', 'kit', 'cartuchos', 'celulas', 'kit', 'plasma', 'kitG', 'escudo', 'cartuchos', 'balas', 'celulas', 'kit', 'trilhos', 'kit', 'kit', 'kitG', 'kit', 'escudo', 'kit', 'kitG', 'kit', 'kitG', 'kit', 'escudo', 'kit', 'kit', 'balas', 'celulas'];
   escolher(suprimentos.length, 6, 5).forEach((c, i) => itens.push([suprimentos[i], c.x, c.y]));
   itens.push(['arma_pulso', 3, 3], ['kit', 1, 3]);
-  const tp = escolher(4, 15, 16);
+  // teletransportes no centro das câmaras abertas (salas grandes), longe do início
+  const cam = (cx, cy) => ({ x: 2 * cx + 1, y: 2 * cy + 1 });
+  const tp = [cam(4, 3), cam(13, 10), cam(14, 3), cam(3, 11)];
   const teleportes = [{ x: tp[0].x, y: tp[0].y, dx: tp[1].x, dy: tp[1].y }, { x: tp[1].x, y: tp[1].y, dx: tp[0].x, dy: tp[0].y }, { x: tp[2].x, y: tp[2].y, dx: tp[3].x, dy: tp[3].y }, { x: tp[3].x, y: tp[3].y, dx: tp[2].x, dy: tp[2].y }];
   // estações médicas nas paredes ao lado de corredores
   escolher(3, 12, 14).forEach((c) => { for (const [a, d] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) { const wx = c.x + a; const wy = c.y + d; if (wx > 0 && wy > 0 && wx < 38 && wy < 30 && g[wy][wx] !== 0 && g[wy][wx] < 7 && !(wx >= 32 && wy >= 24)) { g[wy][wx] = 13; break; } } });
-  const tipoIni = ['rastejador', 'rastejador', 'infectado', 'cuspidor', 'drone', 'inchado', 'sentinela', 'bruto', 'rastejador', 'drone'];
-  const inimigos = escolher(46, 9, 3.2).map((c, i) => [tipoIni[i % tipoIni.length], c.x, c.y]);
-  inimigos.push(['barril', 7, 7], ['barril', 19, 11], ['barril', 27, 5], ['barril', 15, 21], ['bruto', 29, 27]);
+  const tipoIni = ['rastejador', 'infectado', 'cuspidor', 'drone', 'rastejador', 'infectado', 'sentinela', 'drone', 'cuspidor', 'infectado'];
+  const inimigos = escolher(36, 9, 4).map((c, i) => [tipoIni[i % tipoIni.length], c.x, c.y]);
+  inimigos.push(['barril', 7, 7], ['barril', 19, 11], ['barril', 27, 5], ['barril', 15, 21]);
   const ok = (x, y) => g[y][x] === 0;
   const filtrados = inimigos.filter(([, x, y]) => ok(x, y));
   const gatilhos = [];
@@ -327,7 +329,7 @@ function fase4() {
     ['bruto', 34, 14], ['sentinela', 36, 13], ['cuspidor', 33, 21], ['drone', 36, 21], ['inchado', 34, 15], ['infectado', 32, 20],
     ['sentinela', 35, 5], ['drone', 33, 7],
     ['bruto', 16, 5], ['bruto', 26, 5], ['sentinela', 20, 4], ['drone', 22, 7], ['cuspidor', 15, 7], ['cuspidor', 28, 7], ['inchado', 24, 4],
-    ['omega', 6, 6], ['drone', 3, 4], ['drone', 9, 4],
+    ['bruto', 6, 6], ['drone', 3, 4], ['drone', 9, 4],
   ];
   const itens = [
     ['balas', 4, 28], ['kit', 3, 26], ['cartuchos', 9, 29],
@@ -343,18 +345,47 @@ function fase4() {
   const gatilhos = [
     { x: 21, y: 5, r: 3.2, msg: 'ARMADILHA! Um enxame cerca você!', spawns: [['rastejador', 15, 4], ['rastejador', 28, 4], ['rastejador', 15, 8], ['rastejador', 28, 8], ['infectado', 21, 8]] },
     { x: 22, y: 27, r: 1.6, msg: 'Pegar o cartão acordou o arsenal!', spawns: [['rastejador', 18, 29], ['rastejador', 26, 29], ['sentinela', 20, 24]] },
-    { x: 6, y: 7, r: 2.6, msg: 'ÔMEGA: "Vocês são a semente da colmeia."', spawns: [['rastejador', 3, 7], ['rastejador', 9, 7], ['infectado', 6, 4]] },
+    { x: 6, y: 7, r: 2.6, msg: 'Os guardiões do núcleo despertam!', spawns: [['rastejador', 3, 7], ['rastejador', 9, 7], ['infectado', 6, 4]] },
   ];
   const teleportes = [
     { x: 36, y: 13, dx: 35, dy: 5 }, { x: 36, y: 6, dx: 35, dy: 13 },
   ];
   return finalizar(b, {
-    tema: 3, nome: NOMES_FASE[4], inicio: { x: 4.5, y: 27.5, ang: 0 }, chefe: 'omega', inimigos, itens, gatilhos, teleportes,
-    terminalAbre: 'lacre', objetivo: 'Três cartões, o terminal e o coração da colmeia: Ômega.',
+    tema: 3, nome: NOMES_FASE[4], inicio: { x: 4.5, y: 27.5, ang: 0 }, chefe: null, inimigos, itens, gatilhos, teleportes,
+    terminalAbre: 'lacre', objetivo: 'Três cartões, o terminal e a saída para o ninho de Ômega.',
   });
 }
 
-export function criarFase(n) { return [null, fase1, fase2, fase3, fase4][n](); }
+// Fase final: sala de preparo segura (com tudo que você precisa) e uma arena ampla onde Ômega dorme no centro.
+function fase5() {
+  const b = construtor();
+  const { g, sala, fill, octo } = b;
+  sala(2, 12, 8, 19, 2);
+  sala(13, 3, 37, 28, 3);
+  octo(13, 3, 37, 28, 3);
+  fill(9, 15, 12, 15, 0);
+  g[15][10] = 5;
+  g[11][5] = 13; g[20][5] = 13;
+  g[2][25] = 9;
+  [[19, 8, 4], [19, 22, 4], [31, 8, 4], [31, 22, 4], [22, 12, 6], [28, 12, 6], [22, 18, 6], [28, 18, 6], [16, 15, 4], [34, 15, 4]].forEach(([x, y, t]) => fill(x, y, x + 1, y + 1, t));
+  const itens = [
+    ['kitG', 4, 13], ['kitG', 6, 13], ['escudo', 4, 18], ['escudo', 6, 18], ['kitG', 3, 15], ['escudo', 3, 16],
+    ['balas', 7, 13], ['cartuchos', 7, 14], ['celulas', 7, 17], ['plasma', 7, 18], ['trilhos', 6, 16], ['trilhos', 6, 14],
+    ['arma_escopeta', 3, 13], ['arma_pulso', 3, 18], ['arma_plasma', 5, 19], ['arma_trilho', 5, 12],
+    ['kit', 16, 6], ['kit', 34, 25], ['trilhos', 20, 5], ['trilhos', 30, 26], ['trilhos', 25, 9], ['plasma', 16, 10], ['plasma', 34, 20], ['plasma', 25, 22], ['trilhos', 36, 5], ['kitG', 25, 4], ['kitG', 25, 27], ['kit', 14, 4], ['escudo', 36, 15], ['trilhos', 16, 25], ['plasma', 34, 6],
+  ];
+  const gatilhos = [
+    { x: 4, y: 15, r: 7, msg: 'Prepare-se: vida, escudo e munição aqui. A ESQUIVA (Q) agora recarrega bem mais rápido!', spawns: [] },
+    { x: 14, y: 15, r: 2, msg: 'ÔMEGA dorme no centro da arena. Quando você atacar, ele acorda.', spawns: [] },
+  ];
+  const inimigos = [['omega', 25, 15], ['barril', 20, 5], ['barril', 30, 26], ['barril', 15, 20], ['barril', 36, 10]];
+  return finalizar(b, {
+    tema: 3, nome: NOMES_FASE[5], inicio: { x: 4.5, y: 15.5, ang: 0 }, chefe: 'omega', inimigos, itens, gatilhos, teleportes: [], cheio: true,
+    terminalAbre: null, objetivo: 'Prepare-se na salinha, entre na arena e destrua Ômega. Ele acorda quando você atacar.',
+  });
+}
+
+export function criarFase(n) { return [null, fase1, fase2, fase3, fase4, fase5][n](); }
 
 export function criarArena() {
   const b = construtor();

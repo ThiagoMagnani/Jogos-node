@@ -73,7 +73,9 @@ export function criarRenderizador(canvas, recursos) {
       let u = RES.u;
       if (!((RES.lado === 0 && rdx > 0) || (RES.lado === 1 && rdy < 0))) u = 1 - u; // textos não ficam espelhados
       const tx = Math.min(TEX - 1, (u * TEX) | 0);
-      const tex = T.paredes[RES.tipo];
+      let tipoTex = RES.tipo;
+      if (tipoTex === 13) { const st = j.estacoes[RES.cy * MW + RES.cx]; if (st && st.cargas < 3) tipoTex = 20 + Math.max(0, st.cargas); } // estação médica mostra as cargas
+      const tex = T.paredes[tipoTex];
       const f = fogDe(dist, luz) * (RES.lado ? 0.78 : 1);
       const passo = TEX / altura;
       const y0 = Math.max(0, Math.floor(topo));
@@ -170,6 +172,13 @@ function desenharMinimapa(ctx, j) {
         if (v) { ctx.fillStyle = `rgba(150,235,255,${0.35 + Math.random() * 0.5})`; ctx.fillRect(ox + x * e + jx, oy + y * e, e, e); }
         else if (Math.random() < 0.07) { ctx.fillStyle = 'rgba(255,255,255,.35)'; ctx.fillRect(ox + x * e, oy + y * e, e, e); }
       }
+    }
+    if (j.fragmentos.has(zonaDe(Math.floor(j.jogador.x), Math.floor(j.jogador.y)))) { // só nas zonas já descobertas, e embaçado
+      const px = ox + j.jogador.x * e + (Math.random() - 0.5) * 2;
+      const py = oy + j.jogador.y * e + (Math.random() - 0.5) * 2;
+      const g = ctx.createRadialGradient(px, py, 0, px, py, 7);
+      g.addColorStop(0, 'rgba(255,241,118,.85)'); g.addColorStop(1, 'rgba(255,241,118,0)');
+      ctx.fillStyle = g; ctx.fillRect(px - 7, py - 7, 14, 14);
     }
     ctx.fillStyle = 'rgba(0,0,0,.35)';
     ctx.fillRect(ox, oy + (((j.tempo * 40) % (MH * e)) | 0), MW * e, 6);

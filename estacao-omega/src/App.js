@@ -38,9 +38,9 @@ export default function App() {
 
   const aoFim = (r) => {
     setFim(r);
-    if (modo === 'campanha' && !dev && r.resultado === 'venceu' && fase === 4) zerar();
+    if (modo === 'campanha' && !dev && r.resultado === 'venceu' && fase === 5) zerar();
     if (modo === 'campanha' && r.resultado === 'venceu') {
-      if (fase < 4) { setCarga(r.carga); setTela('fase'); return; }
+      if (fase < 5) { setCarga(r.carga); setTela('fase'); return; }
     }
     setTela('fim');
   };

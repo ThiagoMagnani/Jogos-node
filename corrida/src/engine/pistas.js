@@ -177,37 +177,55 @@ export function validarPista(p) {
   return { rMin, sep };
 }
 
-/** Cenário decorativo (árvores, prédios...) gerado com semente fixa, fora da pista. */
+/** Cenário decorativo (árvores, prédios...) gerado com semente fixa. Nada pode invadir a pista nem a barreira. */
 export function gerarCenario(p) {
   const r = aleatorio(p.def.semente * 97 + 5);
   const { x0, y0, x1, y1 } = p.caixa;
   const folga = 700;
   const itens = [];
-  const minD2 = (px, py) => {
+  const livre = p.borda + 45; // distância mínima entre a borda do objeto e o centro da pista
+
+  // menor distância do ponto (px,py) ao centro da pista
+  const distPonto = (px, py) => {
     let m = Infinity;
     for (let i = 0; i < p.n; i += 3) { const d = (px - p.x[i]) ** 2 + (py - p.y[i]) ** 2; if (d < m) m = d; }
-    return m;
+    return Math.sqrt(m);
   };
+  // menor distância do retângulo (com a sombra, que sai 14 para a direita/baixo) ao centro da pista
+  const distRet = (rx, ry, w, h) => {
+    let m = Infinity;
+    const ax = rx, bx = rx + w + 14, ay = ry, by = ry + h + 18;
+    for (let i = 0; i < p.n; i += 3) {
+      const dx = Math.max(ax - p.x[i], 0, p.x[i] - bx), dy = Math.max(ay - p.y[i], 0, p.y[i] - by);
+      const d = dx * dx + dy * dy; if (d < m) m = d;
+    }
+    return Math.sqrt(m);
+  };
+  // raio ocupado por cada tipo de objeto (incluindo sombra)
+  const EXT = { arvore: 1.35, pinheiro: 1.35, lago: 2.4, palmeira: 1.3, guardasol: 1.0, rocha: 1.4 };
+
   const alvo = p.tema === 'cidade' ? 520 : 420;
   let tentativas = 0;
   while (itens.length < alvo && tentativas < alvo * 14) {
     tentativas++;
     const px = x0 - folga + r() * (x1 - x0 + 2 * folga);
     const py = y0 - folga + r() * (y1 - y0 + 2 * folga);
-    const d = Math.sqrt(minD2(px, py));
-    if (d < p.borda + 55) continue;
-    const base = { x: px, y: py, r: r() };
+    let it;
     if (p.tema === 'cidade') {
-      if (d > p.borda + 700) continue;
-      itens.push({ ...base, tipo: 'predio', w: 120 + r() * 160, h: 120 + r() * 160, cor: Math.floor(r() * 4) });
-    } else if (p.tema === 'orla') {
-      if (py > y1 + 300) continue; // o mar começa logo abaixo (ver render.js)
-      itens.push({ ...base, tipo: r() < 0.65 ? 'palmeira' : 'guardasol', tam: 26 + r() * 22 });
-    } else if (p.tema === 'serra') {
-      itens.push({ ...base, tipo: r() < 0.7 ? 'pinheiro' : 'rocha', tam: 28 + r() * 36 });
+      it = { x: px, y: py, r: r(), tipo: 'predio', w: 120 + r() * 160, h: 120 + r() * 160, cor: Math.floor(r() * 4) };
+      const d = distRet(it.x, it.y, it.w, it.h);
+      if (d < livre || d > p.borda + 700) continue;
     } else {
-      itens.push({ ...base, tipo: r() < 0.88 ? 'arvore' : 'lago', tam: 28 + r() * 34 });
+      if (p.tema === 'orla' && py > y1 + 300) continue; // o mar começa logo abaixo (ver render.js)
+      const sorteio = r();
+      const tipo = p.tema === 'orla' ? (sorteio < 0.65 ? 'palmeira' : 'guardasol')
+        : p.tema === 'serra' ? (sorteio < 0.7 ? 'pinheiro' : 'rocha')
+        : sorteio < 0.88 ? 'arvore' : 'lago';
+      it = { x: px, y: py, r: r(), tipo, tam: (p.tema === 'orla' ? 26 : 28) + r() * (p.tema === 'orla' ? 22 : 34) };
+      if (distPonto(px, py) - it.tam * EXT[tipo] < livre) continue;
+      if (p.tema === 'orla' && py + it.tam * EXT[tipo] > y1 + 330) continue; // não invade o mar
     }
+    itens.push(it);
   }
   return itens;
 }

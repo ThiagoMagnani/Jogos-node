@@ -13,7 +13,7 @@ export const TIPOS = {
   drone: { nome: 'Drone Caçador', hp: 38, vel: 2.8, raio: 0.28, esc: 0.8, ia: 'drone', proj: 'bala', cd: 0.55, dano: 5, vp: 9, lift: 0.22, cred: 15 },
   matriarca: { nome: 'Matriarca', hp: 520, vel: 1.3, raio: 0.55, esc: 1.9, ia: 'matriarca', proj: 'acido', dano: 9, vp: 5, boss: true, cred: 0 },
   colosso: { nome: 'Colosso Blindado', hp: 760, vel: 1.3, raio: 0.55, esc: 1.9, ia: 'colosso', proj: 'plasma', dano: 10, vp: 6, boss: true, cred: 0 },
-  omega: { nome: 'ÔMEGA', hp: 1000, vel: 1.4, raio: 0.6, esc: 2.0, ia: 'omega', proj: 'plasma', dano: 11, vp: 5.5, boss: true, cred: 0, lift: 0.1 },
+  omega: { nome: 'ÔMEGA', hp: 4800, vel: 1.7, raio: 0.6, esc: 2.0, ia: 'omega', proj: 'plasma', dano: 11, vp: 5.5, boss: true, cred: 0, lift: 0.1 },
   barril: { nome: 'Barril Explosivo', hp: 15, vel: 0, raio: 0.3, esc: 0.7, ia: 'estatico', cred: 0 },
 };
 
@@ -22,7 +22,7 @@ export function criarInimigo(tipo, x, y, escala = 1) {
   return {
     tipo, x: x + 0.5, y: y + 0.5, hp: T.hp * escala, hpMax: T.hp * escala, esc: T.esc, lift: T.lift || 0,
     desperto: false, morto: false, t: Math.random() * 5, cd: 1 + Math.random(), cdMelee: 0, cdInv: 6,
-    atq: 0, hurt: 0, tMorte: 0, rajada: 0, carga: 0, fase: 1, lado: Math.random() < 0.5 ? 1 : -1, escala,
+    atq: 0, hurt: 0, tMorte: 0, cdX: 6, tx: 0, blind: 0, rajada: 0, carga: 0, fase: 1, lado: Math.random() < 0.5 ? 1 : -1, escala,
   };
 }
 
@@ -62,8 +62,8 @@ function andar(j, e, ang, vel, dt) {
   return false;
 }
 
-export function atirar(j, e, ang, tipo, dano, vel, veneno = 0) {
-  j.projeteis.push({ x: e.x, y: e.y, dx: Math.cos(ang), dy: Math.sin(ang), vel, dano, tipo, veneno, vida: 5 });
+export function atirar(j, e, ang, tipo, dano, vel, veneno = 0, guia = false) {
+  j.projeteis.push({ x: e.x, y: e.y, dx: Math.cos(ang), dy: Math.sin(ang), vel, dano, tipo, veneno, vida: guia ? 3.3 : 5, guia });
   if (tipo === 'acido') som.cuspe(); else if (tipo === 'plasma') som.zap(); else som.metralha();
 }
 
@@ -92,9 +92,10 @@ function acordarSala(j, e) {
 
 export function danificar(j, e, n, silencio) {
   if (e.morto) return;
+  if (e.blind > 0) n *= 0.15; // Colosso com blindagem erguida
   e.hp -= n;
   e.hurt = 0.12;
-  if (!e.desperto) acordarSala(j, e);
+  if (!e.desperto) { acordarSala(j, e); if (TIPOS[e.tipo].boss) fala(j, e); }
   e.desperto = true;
   if (!silencio) { som.acerto(); j.hit = 0.18; }
   if (e.hp <= 0) { matar(j, e); return; }
@@ -192,7 +193,7 @@ export function atualizarInimigo(j, e, dt) {
   const ang = Math.atan2(dy, dx);
 
   if (!e.desperto) {
-    if (j.salaJogador === e.sala) { // só acorda quando o jogador entra na sala dele
+    if (j.salaJogador === e.sala && !e.dorme) { // só acorda quando o jogador entra na sala dele
       e.desperto = true;
       if (T.boss) { fala(j, e); }
     }
@@ -256,6 +257,11 @@ export function atualizarInimigo(j, e, dt) {
         leque(j, e, ang, f2 ? 7 : 5, 0.2, T, 4);
         if (Math.random() < 0.3) fala(j, e);
       }
+      e.cdX -= dt;
+      if (e.tx > 0) { // SALTO: treme (aviso), depois pula perto do jogador e explode em ácido
+        e.tx -= dt; e.azul = 0.1; e.atq = 0.2;
+        if (e.tx <= 0) { teleportar(j, e, 1.5, 2.5); for (let i = 0; i < 12; i++) atirar(j, e, (i * Math.PI * 2) / 12, 'acido', T.dano, 3.6, 4); }
+      } else if (e.cdX <= 0 && d > 4 && vejo) { e.cdX = f2 ? 6 : 9; e.tx = 0.8; mensagem(j, 'A Matriarca se encolhe... ela vai PULAR!', 'fala'); }
       e.cdInv -= dt;
       if (e.cdInv <= 0) {
         e.cdInv = f2 ? 6 : 9;
@@ -265,6 +271,9 @@ export function atualizarInimigo(j, e, dt) {
     }
     case 'colosso': {
       const f2 = e.hp < T.hp * 0.5 * e.escala;
+      e.cdX -= dt;
+      if (e.blind > 0) { e.blind -= dt; e.azul = 0.2; } // blindagem erguida (azul): quase imune
+      else if (e.cdX <= 0) { e.blind = 3; e.cdX = f2 ? 8 : 11; mensagem(j, 'Colosso ergue a BLINDAGEM! Desvie até ela cair.', 'fala'); }
       if (e.carga > 0) {
         e.carga -= dt; e.atq = 0.1;
         andar(j, e, ang, 6, dt);
@@ -287,24 +296,63 @@ export function atualizarInimigo(j, e, dt) {
     case 'omega': {
       const f2 = e.hp < T.hp * 0.66 * e.escala;
       const f3 = e.hp < T.hp * 0.33 * e.escala;
-      if (d > 6) andar(j, e, ang, vel * (f3 ? 1.5 : 1), dt);
+      if (e.met && e.met.length) { // CHUVA DE PLASMA: cada marca no chão explode quando o aviso termina
+        e.met = e.met.filter((m) => { m.t -= dt; if (m.t > 0) return true; explodir(j, m.x, m.y, 2.1, 34, e); return false; });
+      }
+      if (e.orbs > 0) { // orbes saem em sequência, um a cada 0.4s
+        e.orbT -= dt;
+        if (e.orbT <= 0) { e.orbT = 0.4; e.orbs -= 1; e.atq = 0.2; atirar(j, e, ang + (Math.random() - 0.5) * 0.3, 'plasma', T.dano - 1, 4.4, 0, true); }
+      }
+      if (e.tx > 0) { // PULSO GRAVITACIONAL: fica parado brilhando, depois empurra você e dispara um anel
+        e.tx -= dt; e.azul = 0.1; e.atq = 0.2;
+        if (e.tx <= 0) {
+          anel(j, e, f3 ? 28 : 20, e.t, T);
+          if (d < 6) { const a = Math.atan2(dy, dx); for (let i = 0; i < 12; i++) mover(j, p, Math.cos(a) * 0.25, Math.sin(a) * 0.25, 0.25); danoJogador(j, 12); }
+          j.ondaFlash = 0.4; som.explosao();
+        }
+        break;
+      }
+      if (d > 6) andar(j, e, ang, vel * (f3 ? 1.3 : 1), dt);
       else if (d < 3) andar(j, e, ang + Math.PI, vel, dt);
       else andar(j, e, ang + (Math.PI / 2) * e.lado, vel * 0.8, dt);
-      e.rajada += dt;
       if (e.cd <= 0 && vejo) {
-        e.cd = f3 ? 0.9 : f2 ? 1.4 : 2;
+        e.cd = f3 ? 1.1 : f2 ? 1.45 : 1.8;
         e.atq = 0.4;
         const r = Math.random();
-        if (r < 0.4) leque(j, e, ang, f3 ? 9 : 5, 0.16, T);
-        else if (r < 0.8) anel(j, e, f3 ? 18 : 12, e.t, T);
-        else { teleportar(j, e, 3, 6); fala(j, e); }
+        if (r < 0.16) leque(j, e, ang, f3 ? 9 : 7, 0.15, T);
+        else if (r < 0.34 && !j.projeteis.some((q) => q.guia) && !e.orbs) { e.orbs = f3 ? 5 : f2 ? 4 : 3; e.orbT = 0; mensagem(j, 'Orbes teleguiados, um atrás do outro! Corra em círculos!', 'fala'); }
+        else if (r < 0.5) { // marca o chão: no seu pé, à frente de onde você corre e em volta
+          const n = f3 ? 8 : f2 ? 6 : 5;
+          for (let i = 0; i < n; i++) {
+            const a = Math.random() * Math.PI * 2; const dd = i === 0 ? 0 : 1 + Math.random() * 3.5;
+            const mx = p.x + Math.cos(a) * dd + (i < 2 ? Math.cos(p.ang) * 1.5 : 0); const my = p.y + Math.sin(a) * dd + (i < 2 ? Math.sin(p.ang) * 1.5 : 0);
+            if (!livre(j, mx, my, 0.1)) continue;
+            (e.met = e.met || []).push({ x: mx, y: my, t: 1.3 });
+            j.efeitos.push({ x: mx, y: my, tipo: 'marca', t: 0, dur: 1.3, esc: 1.7, lift: 0 });
+          }
+          mensagem(j, 'CHUVA DE PLASMA! Saia das marcas no chão!', 'destaque');
+        }
+        else if (r < 0.66) { // BOLHAS: 3 bolhas de veneno voam até onde você está e, ao cair, deixam poças
+          for (let i = 0; i < (f3 ? 4 : 3); i++) {
+            const tx = p.x + (Math.random() - 0.5) * 5; const ty = p.y + (Math.random() - 0.5) * 5;
+            const dd = Math.hypot(tx - e.x, ty - e.y) || 1;
+            j.projeteis.push({ x: e.x, y: e.y, dx: (tx - e.x) / dd, dy: (ty - e.y) / dd, vel: 4.2, dano: 10, tipo: 'acido', veneno: 4, vida: dd / 4.2, poca: true });
+          }
+          som.cuspe(); mensagem(j, 'Ômega cospe BOLHAS de veneno! Cuidado com as poças!', 'fala');
+        }
+        else if (r < 0.82) { e.tx = 0.9; mensagem(j, 'Ômega concentra energia... AFASTE-SE!', 'fala'); }
+        else { teleportar(j, e, 3, 6); leque(j, e, Math.atan2(p.y - e.y, p.x - e.x), 3, 0.2, T); fala(j, e); }
       }
       e.cdInv -= dt;
       if (e.cdInv <= 0) {
-        e.cdInv = f3 ? 7 : 11;
-        if (f2 && j.inimigos.filter((o) => o.invocado && !o.morto).length < 5) { invocar(j, 'drone', e.x + 1.5, e.y); invocar(j, 'rastejador', e.x - 1.5, e.y); mensagem(j, 'Ômega gera crias da própria carne!', 'fala'); }
+        e.cdInv = f3 ? 9 : 13;
+        if (f2 && j.inimigos.filter((o) => o.invocado && !o.morto).length < 6) {
+          invocar(j, 'drone', e.x + 1.5, e.y); invocar(j, 'drone', e.x - 1.5, e.y);
+          mensagem(j, 'Ômega gera crias da própria carne!', 'fala');
+        }
       }
       if (f2 && !e.reforco) { e.reforco = true; mensagem(j, 'ÔMEGA: "ENTÃO VOCÊ SANGRA... EU TAMBÉM."', 'fala'); som.fala(); }
+      if (f3 && !e.furia) { e.furia = true; mensagem(j, 'ÔMEGA ENFURECEU! Mais rápido, mais violento!', 'destaque'); som.fala(); }
       break;
     }
     default:
@@ -321,10 +369,27 @@ export function atualizarInimigo(j, e, dt) {
 
 export function atualizarProjeteis(j, dt) {
   const p = j.jogador;
+  j.pocas = (j.pocas || []).filter((o) => {
+    o.t -= dt;
+    if (o.t > 0 && p.invul <= 0 && Math.hypot(o.x - p.x, o.y - p.y) < 1.0) { p.veneno = Math.max(p.veneno, 3); }
+    return o.t > 0;
+  });
   j.projeteis = j.projeteis.filter((q) => {
     q.vida -= dt;
+    if (q.guia) { // orbe teleguiado: curva devagar na direção do jogador
+      const a = Math.atan2(q.dy, q.dx);
+      let da = Math.atan2(p.y - q.y, p.x - q.x) - a;
+      da = Math.atan2(Math.sin(da), Math.cos(da));
+      const n = a + Math.max(-2.2 * dt, Math.min(2.2 * dt, da));
+      q.dx = Math.cos(n); q.dy = Math.sin(n);
+    }
     q.x += q.dx * q.vel * dt;
     q.y += q.dy * q.vel * dt;
+    if (q.poca && q.vida <= 0) { // a bolha estoura no chão: poça de veneno
+      j.pocas.push({ x: q.x, y: q.y, t: 7 });
+      j.efeitos.push({ x: q.x, y: q.y, tipo: 'poca', t: 0, dur: 7, esc: 1.5, lift: 0 });
+      return false;
+    }
     if (q.vida <= 0 || !livre(j, q.x, q.y, 0.05)) {
       j.efeitos.push({ x: q.x, y: q.y, tipo: 'puff', t: 0, dur: 0.3, esc: 0.4, lift: 0.3 });
       return false;

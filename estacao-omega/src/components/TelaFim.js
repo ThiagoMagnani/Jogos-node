@@ -18,7 +18,7 @@ export default function TelaFim({ fim, modo, onDeNovo, onTitulo }) {
         <li><strong>{fim.itens}</strong><span>ITENS</span></li>
       </ul>
       <div className="fim-botoes">
-        <button type="button" className="btn-jogar" onClick={onDeNovo}>{modo === 'horda' ? 'JOGAR HORDA DE NOVO' : venceu ? 'JOGAR DE NOVO' : 'TENTAR A FASE DE NOVO'}</button>
+        <button type="button" className="btn-jogar" onClick={onDeNovo}>{modo === 'horda' ? 'JOGAR HORDA DE NOVO' : venceu ? 'JOGAR DE NOVO' : fim.fase === 5 ? 'TENTAR O CHEFÃO DE NOVO' : 'TENTAR A FASE DE NOVO'}</button>
         <button type="button" className="btn-link" onClick={onTitulo}>Voltar ao título</button>
       </div>
     </main>

@@ -159,6 +159,8 @@ const fx = {
   boom0: () => pintar((g) => { disco(g, '#ffeb3b', 16, 17, 6); disco(g, '#fff', 16, 17, 3); }),
   boom1: () => pintar((g) => { disco(g, '#ff6d00', 16, 17, 12); disco(g, '#ffeb3b', 16, 17, 8); disco(g, '#fff', 16, 17, 4); }),
   boom2: () => pintar((g) => { disco(g, 'rgba(50,40,50,.9)', 16, 16, 14); disco(g, '#ff6d00', 14, 15, 8); disco(g, '#ffab00', 20, 19, 4); }),
+  poca: () => pintar((g) => { disco(g, 'rgba(30,150,40,.75)', 16, 24, 9); disco(g, 'rgba(120,255,90,.7)', 13, 22, 4); disco(g, 'rgba(120,255,90,.6)', 20, 26, 3); }),
+  marca: () => pintar((g) => { disco(g, 'rgba(255,40,40,.55)', 16, 24, 8); disco(g, 'rgba(255,200,120,.8)', 16, 24, 4); }),
   onda: () => pintar((g) => { disco(g, 'rgba(79,227,255,.55)', 16, 24, 7); disco(g, '#bff6ff', 16, 24, 3); }),
   acerto: () => pintar((g) => { disco(g, 'rgba(79,227,255,.5)', 16, 17, 10); R(g, '#fff', 15, 8, 2, 18); R(g, '#fff', 7, 16, 18, 2); }),
   puff: () => pintar((g) => { disco(g, 'rgba(255,255,255,.85)', 16, 20, 4); R(g, '#ffd27a', 8, 18, 2, 2); R(g, '#ffd27a', 22, 22, 2, 2); }),

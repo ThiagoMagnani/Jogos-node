@@ -110,7 +110,8 @@ export function atualizar(corr, inpJ, dt) {
     if (inp.reset && c.tReset <= 0) { recolocar(corr, c); c.tReset = 1.5; }
     c.tReset -= dt;
 
-    passoFisico(c, inp, dt);
+    if (correndo) passoFisico(c, inp, dt);
+    else { c.vx = c.vy = c.vf = c.vl = 0; c.derrapa = 0; c.nitroOn = false; } // na contagem os carros ficam parados
     atualizarPosicao(corr, c);
     efeitos(corr, c, dt);
 

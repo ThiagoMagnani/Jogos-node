@@ -6,7 +6,7 @@ export const UPGRADES = [
   { id: 'cad', nome: 'Gatilho Rápido', desc: 'Armas atiram 8% mais rápido', icone: '⚡', max: 6, custo: (n) => 65 + 50 * n, aplica: (p) => { p.mod.cad *= 0.92; } },
   { id: 'mun', nome: 'Bolsa Expandida', desc: '+20% de munição máxima', icone: '🎒', max: 5, custo: (n) => 45 + 35 * n, aplica: (p) => { p.mod.municao += 0.2; } },
   { id: 'vel', nome: 'Servo-Pernas', desc: '+6% de velocidade', icone: '👟', max: 4, custo: (n) => 55 + 40 * n, aplica: (p) => { p.mod.vel += 0.06; } },
-  { id: 'dash', nome: 'Propulsor (Q)', desc: 'Dash recarrega 0,5s mais rápido', icone: '💨', max: 4, custo: (n) => 50 + 45 * n, aplica: (p) => { p.mod.dashCd = Math.max(1, p.mod.dashCd - 0.5); } },
+  { id: 'dash', nome: 'Propulsor (Q)', desc: 'Dash recarrega 0,25s mais rápido', icone: '💨', max: 4, custo: (n) => 50 + 45 * n, aplica: (p) => { p.mod.dashCd = Math.max(0.6, p.mod.dashCd - 0.25); } },
   { id: 'onda', nome: 'Onda de Choque (F)', desc: '+30 de dano e recarga 1,5s menor', icone: '🌀', max: 5, custo: (n) => 65 + 50 * n, aplica: (p) => { p.mod.ondaDano += 30; p.mod.ondaCd = Math.max(4, p.mod.ondaCd - 1.5); } },
   { id: 'regen', nome: 'Nanoreparo', desc: '+0,8 de vida por segundo', icone: '✚', max: 4, custo: (n) => 90 + 65 * n, aplica: (p) => { p.mod.regen += 0.8; } },
   { id: 'vampiro', nome: 'Sede Biológica', desc: '+2 de vida a cada abate', icone: '🩸', max: 4, custo: (n) => 110 + 80 * n, aplica: (p) => { p.mod.vampiro += 2; } },

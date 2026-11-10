@@ -108,7 +108,7 @@ export default function GameView({ modo, fase, carga, dev, onFim, onReiniciar, o
       render.desenhar(j, j.tempo);
       if (terminou && agora > fimEm) {
         onFim({
-          resultado: j.estado, tempo: j.tempo, abates: j.estat.abates, total: j.estat.total, itens: j.estat.itens,
+          resultado: j.estado, fase: j.fase, tempo: j.tempo, abates: j.estat.abates, total: j.estat.total, itens: j.estat.itens,
           segredos: j.estat.segredos, segTotal: j.estat.segTotal, onda: j.horda ? j.horda.onda : 0, carga: snapshotCarga(j),
         });
         return;
